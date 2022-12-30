@@ -1,0 +1,311 @@
+State 0 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: Start $end
+
+    1 $@1: %empty
+
+    2 Start: Declaration $@1 Expression
+
+    3 Expression: Expression '+' Expression
+    4           | Expression '-' Expression
+    5           | Expression '*' Expression
+    6           | Expression '/' Expression
+    7           | '(' Expression ')'
+    8           | '-' Expression
+    9           | T_INT_NUMBER
+   10           | ID
+
+   11 Declaration: ID '=' T_INT_NUMBER
+   12            | %empty
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '(' (40) 7
+    ')' (41) 7
+    '*' (42) 5
+    '+' (43) 3
+    '-' (45) 4 8
+    '/' (47) 6
+    '=' (61) 11
+    error (256)
+    T_INT_NUMBER <intValue> (258) 9 11
+    ID <stringValue> (259) 10 11
+    UMINUS (260)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (13)
+        on left: 0
+    Start (14)
+        on left: 2
+        on right: 0
+    $@1 (15)
+        on left: 1
+        on right: 2
+    Expression <intValue> (16)
+        on left: 3 4 5 6 7 8 9 10
+        on right: 2 3 4 5 6 7 8
+    Declaration <stringValue> (17)
+        on left: 11 12
+        on right: 2
+
+
+State 0
+
+    0 $accept: . Start $end
+
+    ID  shift, and go to state 1
+
+    ID        [reduce using rule 12 (Declaration)]
+    $default  reduce using rule 12 (Declaration)
+    
+
+    Start        go to state 2
+    Declaration  go to state 3
+
+
+State 1
+
+   11 Declaration: ID . '=' T_INT_NUMBER
+
+    '='  shift, and go to state 4
+
+
+State 2
+
+    0 $accept: Start . $end
+
+    $end  shift, and go to state 5
+
+
+State 3
+
+    2 Start: Declaration . $@1 Expression
+
+    $default  reduce using rule 1 ($@1)
+
+    $@1  go to state 6
+
+
+State 4
+
+   11 Declaration: ID '=' . T_INT_NUMBER
+
+    T_INT_NUMBER  shift, and go to state 7
+
+
+State 5
+
+    0 $accept: Start $end .
+
+    $default  accept
+
+
+State 6
+
+    2 Start: Declaration $@1 . Expression
+
+    T_INT_NUMBER  shift, and go to state 8
+    ID            shift, and go to state 9
+    '-'           shift, and go to state 10
+    '('           shift, and go to state 11
+
+    Expression  go to state 12
+
+
+State 7
+
+   11 Declaration: ID '=' T_INT_NUMBER .
+
+    $default  reduce using rule 11 (Declaration)
+
+
+State 8
+
+    9 Expression: T_INT_NUMBER .
+
+    $default  reduce using rule 9 (Expression)
+
+
+State 9
+
+   10 Expression: ID .
+
+    $default  reduce using rule 10 (Expression)
+
+
+State 10
+
+    8 Expression: '-' . Expression
+
+    T_INT_NUMBER  shift, and go to state 8
+    ID            shift, and go to state 9
+    '-'           shift, and go to state 10
+    '('           shift, and go to state 11
+
+    Expression  go to state 13
+
+
+State 11
+
+    7 Expression: '(' . Expression ')'
+
+    T_INT_NUMBER  shift, and go to state 8
+    ID            shift, and go to state 9
+    '-'           shift, and go to state 10
+    '('           shift, and go to state 11
+
+    Expression  go to state 14
+
+
+State 12
+
+    2 Start: Declaration $@1 Expression .
+    3 Expression: Expression . '+' Expression
+    4           | Expression . '-' Expression
+    5           | Expression . '*' Expression
+    6           | Expression . '/' Expression
+
+    '-'  shift, and go to state 15
+    '+'  shift, and go to state 16
+    '*'  shift, and go to state 17
+    '/'  shift, and go to state 18
+
+    $default  reduce using rule 2 (Start)
+
+
+State 13
+
+    3 Expression: Expression . '+' Expression
+    4           | Expression . '-' Expression
+    5           | Expression . '*' Expression
+    6           | Expression . '/' Expression
+    8           | '-' Expression .
+
+    $default  reduce using rule 8 (Expression)
+
+
+State 14
+
+    3 Expression: Expression . '+' Expression
+    4           | Expression . '-' Expression
+    5           | Expression . '*' Expression
+    6           | Expression . '/' Expression
+    7           | '(' Expression . ')'
+
+    '-'  shift, and go to state 15
+    '+'  shift, and go to state 16
+    '*'  shift, and go to state 17
+    '/'  shift, and go to state 18
+    ')'  shift, and go to state 19
+
+
+State 15
+
+    4 Expression: Expression '-' . Expression
+
+    T_INT_NUMBER  shift, and go to state 8
+    ID            shift, and go to state 9
+    '-'           shift, and go to state 10
+    '('           shift, and go to state 11
+
+    Expression  go to state 20
+
+
+State 16
+
+    3 Expression: Expression '+' . Expression
+
+    T_INT_NUMBER  shift, and go to state 8
+    ID            shift, and go to state 9
+    '-'           shift, and go to state 10
+    '('           shift, and go to state 11
+
+    Expression  go to state 21
+
+
+State 17
+
+    5 Expression: Expression '*' . Expression
+
+    T_INT_NUMBER  shift, and go to state 8
+    ID            shift, and go to state 9
+    '-'           shift, and go to state 10
+    '('           shift, and go to state 11
+
+    Expression  go to state 22
+
+
+State 18
+
+    6 Expression: Expression '/' . Expression
+
+    T_INT_NUMBER  shift, and go to state 8
+    ID            shift, and go to state 9
+    '-'           shift, and go to state 10
+    '('           shift, and go to state 11
+
+    Expression  go to state 23
+
+
+State 19
+
+    7 Expression: '(' Expression ')' .
+
+    $default  reduce using rule 7 (Expression)
+
+
+State 20
+
+    3 Expression: Expression . '+' Expression
+    4           | Expression . '-' Expression
+    4           | Expression '-' Expression .
+    5           | Expression . '*' Expression
+    6           | Expression . '/' Expression
+
+    '*'  shift, and go to state 17
+    '/'  shift, and go to state 18
+
+    $default  reduce using rule 4 (Expression)
+
+
+State 21
+
+    3 Expression: Expression . '+' Expression
+    3           | Expression '+' Expression .
+    4           | Expression . '-' Expression
+    5           | Expression . '*' Expression
+    6           | Expression . '/' Expression
+
+    '*'  shift, and go to state 17
+    '/'  shift, and go to state 18
+
+    $default  reduce using rule 3 (Expression)
+
+
+State 22
+
+    3 Expression: Expression . '+' Expression
+    4           | Expression . '-' Expression
+    5           | Expression . '*' Expression
+    5           | Expression '*' Expression .
+    6           | Expression . '/' Expression
+
+    $default  reduce using rule 5 (Expression)
+
+
+State 23
+
+    3 Expression: Expression . '+' Expression
+    4           | Expression . '-' Expression
+    5           | Expression . '*' Expression
+    6           | Expression . '/' Expression
+    6           | Expression '/' Expression .
+
+    $default  reduce using rule 6 (Expression)
