@@ -4,7 +4,6 @@
 extern int yyparse(void);
 extern FILE * yyin;
 extern int yylineno;
-extern void buildSymbolTable();
 
 int yyerror (char const * errorString) {
     fprintf( stderr, "Line : %d, error : %s\n", yylineno, errorString);
@@ -12,7 +11,7 @@ int yyerror (char const * errorString) {
 
 int main (int argc, char ** argv) {
 
-    buildSymbolTable();
+    // buildSymbolTable();
 
     yyin = fopen ("test", "r");
     yyparse();

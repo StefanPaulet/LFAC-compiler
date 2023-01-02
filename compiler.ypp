@@ -1,0 +1,71 @@
+%{
+    #include <stdio.h>
+    #include <string.h>
+    #include <stdlib.h>
+    #include "main.hpp"
+    extern "C" {
+        int yylex ( void );
+    }  
+%}
+
+%union {
+    int intValue;
+    float floatValue;
+    char charValue;
+    char boolValue;
+    char const * stringValue;
+}
+    
+
+%token <intValue>        T_INT_NUMBER
+%token <intValue>       T_CHAR_VALUE
+%token <intValue>      T_FLOAT_NUMBER
+%token <intValue>       T_BOOL_VALUE
+%token <intValue>       T_MAIN_IDENTIFIER
+
+%token <intValue> T_IDENTIFIER
+%nterm <intValue> N_DECLARATION
+%nterm <intValue> N_EXPRESSION
+%nterm <intValue> N_PARAMETERS
+%nterm <intValue> N_CONSTANT_VALUE
+
+%left '-' '+'
+%left '*' '/' 
+%right UMINUS
+
+%start N_START
+
+%%
+
+N_START:
+    N_DECLARATION { printf ( "Start of declarations\n" ); }
+    T_MAIN_IDENTIFIER
+    N_EXPRESSION { printf ( "Expression evaluated\n" ); };
+
+N_CONSTANT_VALUE :
+    T_INT_NUMBER |
+    T_FLOAT_NUMBER |
+    T_CHAR_VALUE |
+    T_BOOL_VALUE;
+
+N_EXPRESSION: 
+    N_EXPRESSION '+' N_EXPRESSION |
+    N_EXPRESSION '-' N_EXPRESSION |
+    N_EXPRESSION '*' N_EXPRESSION |
+    N_EXPRESSION '/' N_EXPRESSION |
+    '(' N_EXPRESSION ')' {} |
+    '-' N_EXPRESSION %prec UMINUS {} |
+    N_CONSTANT_VALUE |
+    T_IDENTIFIER |
+    T_IDENTIFIER '(' N_PARAMETERS ')';
+    
+
+N_DECLARATION:
+    T_IDENTIFIER '=' N_CONSTANT_VALUE ';' N_DECLARATION |
+    T_IDENTIFIER '=' N_CONSTANT_VALUE ';';
+
+N_PARAMETERS:
+    N_EXPRESSION ',' N_PARAMETERS |
+    N_EXPRESSION;
+
+%%

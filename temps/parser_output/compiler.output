@@ -1,0 +1,491 @@
+Grammar
+
+    0 $accept: N_START $end
+
+    1 $@1: ε
+
+    2 N_START: N_DECLARATION $@1 T_MAIN_IDENTIFIER N_EXPRESSION
+
+    3 N_CONSTANT_VALUE: T_INT_NUMBER
+    4                 | T_FLOAT_NUMBER
+    5                 | T_CHAR_VALUE
+    6                 | T_BOOL_VALUE
+
+    7 N_EXPRESSION: N_EXPRESSION '+' N_EXPRESSION
+    8             | N_EXPRESSION '-' N_EXPRESSION
+    9             | N_EXPRESSION '*' N_EXPRESSION
+   10             | N_EXPRESSION '/' N_EXPRESSION
+   11             | '(' N_EXPRESSION ')'
+   12             | '-' N_EXPRESSION
+   13             | N_CONSTANT_VALUE
+   14             | T_IDENTIFIER
+   15             | T_IDENTIFIER '(' N_PARAMETERS ')'
+
+   16 N_DECLARATION: T_IDENTIFIER '=' N_CONSTANT_VALUE ';' N_DECLARATION
+   17              | T_IDENTIFIER '=' N_CONSTANT_VALUE ';'
+
+   18 N_PARAMETERS: N_EXPRESSION ',' N_PARAMETERS
+   19             | N_EXPRESSION
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '(' (40) 11 15
+    ')' (41) 11 15
+    '*' (42) 9
+    '+' (43) 7
+    ',' (44) 18
+    '-' (45) 8 12
+    '/' (47) 10
+    ';' (59) 16 17
+    '=' (61) 16 17
+    error (256)
+    T_INT_NUMBER <intValue> (258) 3
+    T_CHAR_VALUE <intValue> (259) 5
+    T_FLOAT_NUMBER <intValue> (260) 4
+    T_BOOL_VALUE <intValue> (261) 6
+    T_MAIN_IDENTIFIER <intValue> (262) 2
+    T_IDENTIFIER <intValue> (263) 14 15 16 17
+    UMINUS (264)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (19)
+        on left: 0
+    N_START (20)
+        on left: 2
+        on right: 0
+    $@1 (21)
+        on left: 1
+        on right: 2
+    N_CONSTANT_VALUE <intValue> (22)
+        on left: 3 4 5 6
+        on right: 13 16 17
+    N_EXPRESSION <intValue> (23)
+        on left: 7 8 9 10 11 12 13 14 15
+        on right: 2 7 8 9 10 11 12 18 19
+    N_DECLARATION <intValue> (24)
+        on left: 16 17
+        on right: 2 16
+    N_PARAMETERS <intValue> (25)
+        on left: 18 19
+        on right: 15 18
+
+
+State 0
+
+    0 $accept: • N_START $end
+
+    T_IDENTIFIER  shift, and go to state 1
+
+    N_START        go to state 2
+    N_DECLARATION  go to state 3
+
+
+State 1
+
+   16 N_DECLARATION: T_IDENTIFIER • '=' N_CONSTANT_VALUE ';' N_DECLARATION
+   17              | T_IDENTIFIER • '=' N_CONSTANT_VALUE ';'
+
+    '='  shift, and go to state 4
+
+
+State 2
+
+    0 $accept: N_START • $end
+
+    $end  shift, and go to state 5
+
+
+State 3
+
+    2 N_START: N_DECLARATION • $@1 T_MAIN_IDENTIFIER N_EXPRESSION
+
+    $default  reduce using rule 1 ($@1)
+
+    $@1  go to state 6
+
+
+State 4
+
+   16 N_DECLARATION: T_IDENTIFIER '=' • N_CONSTANT_VALUE ';' N_DECLARATION
+   17              | T_IDENTIFIER '=' • N_CONSTANT_VALUE ';'
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+
+    N_CONSTANT_VALUE  go to state 11
+
+
+State 5
+
+    0 $accept: N_START $end •
+
+    $default  accept
+
+
+State 6
+
+    2 N_START: N_DECLARATION $@1 • T_MAIN_IDENTIFIER N_EXPRESSION
+
+    T_MAIN_IDENTIFIER  shift, and go to state 12
+
+
+State 7
+
+    3 N_CONSTANT_VALUE: T_INT_NUMBER •
+
+    $default  reduce using rule 3 (N_CONSTANT_VALUE)
+
+
+State 8
+
+    5 N_CONSTANT_VALUE: T_CHAR_VALUE •
+
+    $default  reduce using rule 5 (N_CONSTANT_VALUE)
+
+
+State 9
+
+    4 N_CONSTANT_VALUE: T_FLOAT_NUMBER •
+
+    $default  reduce using rule 4 (N_CONSTANT_VALUE)
+
+
+State 10
+
+    6 N_CONSTANT_VALUE: T_BOOL_VALUE •
+
+    $default  reduce using rule 6 (N_CONSTANT_VALUE)
+
+
+State 11
+
+   16 N_DECLARATION: T_IDENTIFIER '=' N_CONSTANT_VALUE • ';' N_DECLARATION
+   17              | T_IDENTIFIER '=' N_CONSTANT_VALUE • ';'
+
+    ';'  shift, and go to state 13
+
+
+State 12
+
+    2 N_START: N_DECLARATION $@1 T_MAIN_IDENTIFIER • N_EXPRESSION
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+    T_IDENTIFIER    shift, and go to state 14
+    '-'             shift, and go to state 15
+    '('             shift, and go to state 16
+
+    N_CONSTANT_VALUE  go to state 17
+    N_EXPRESSION      go to state 18
+
+
+State 13
+
+   16 N_DECLARATION: T_IDENTIFIER '=' N_CONSTANT_VALUE ';' • N_DECLARATION
+   17              | T_IDENTIFIER '=' N_CONSTANT_VALUE ';' •
+
+    T_IDENTIFIER  shift, and go to state 1
+
+    $default  reduce using rule 17 (N_DECLARATION)
+
+    N_DECLARATION  go to state 19
+
+
+State 14
+
+   14 N_EXPRESSION: T_IDENTIFIER •
+   15             | T_IDENTIFIER • '(' N_PARAMETERS ')'
+
+    '('  shift, and go to state 20
+
+    $default  reduce using rule 14 (N_EXPRESSION)
+
+
+State 15
+
+   12 N_EXPRESSION: '-' • N_EXPRESSION
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+    T_IDENTIFIER    shift, and go to state 14
+    '-'             shift, and go to state 15
+    '('             shift, and go to state 16
+
+    N_CONSTANT_VALUE  go to state 17
+    N_EXPRESSION      go to state 21
+
+
+State 16
+
+   11 N_EXPRESSION: '(' • N_EXPRESSION ')'
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+    T_IDENTIFIER    shift, and go to state 14
+    '-'             shift, and go to state 15
+    '('             shift, and go to state 16
+
+    N_CONSTANT_VALUE  go to state 17
+    N_EXPRESSION      go to state 22
+
+
+State 17
+
+   13 N_EXPRESSION: N_CONSTANT_VALUE •
+
+    $default  reduce using rule 13 (N_EXPRESSION)
+
+
+State 18
+
+    2 N_START: N_DECLARATION $@1 T_MAIN_IDENTIFIER N_EXPRESSION •
+    7 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+    8             | N_EXPRESSION • '-' N_EXPRESSION
+    9             | N_EXPRESSION • '*' N_EXPRESSION
+   10             | N_EXPRESSION • '/' N_EXPRESSION
+
+    '-'  shift, and go to state 23
+    '+'  shift, and go to state 24
+    '*'  shift, and go to state 25
+    '/'  shift, and go to state 26
+
+    $default  reduce using rule 2 (N_START)
+
+
+State 19
+
+   16 N_DECLARATION: T_IDENTIFIER '=' N_CONSTANT_VALUE ';' N_DECLARATION •
+
+    $default  reduce using rule 16 (N_DECLARATION)
+
+
+State 20
+
+   15 N_EXPRESSION: T_IDENTIFIER '(' • N_PARAMETERS ')'
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+    T_IDENTIFIER    shift, and go to state 14
+    '-'             shift, and go to state 15
+    '('             shift, and go to state 16
+
+    N_CONSTANT_VALUE  go to state 17
+    N_EXPRESSION      go to state 27
+    N_PARAMETERS      go to state 28
+
+
+State 21
+
+    7 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+    8             | N_EXPRESSION • '-' N_EXPRESSION
+    9             | N_EXPRESSION • '*' N_EXPRESSION
+   10             | N_EXPRESSION • '/' N_EXPRESSION
+   12             | '-' N_EXPRESSION •
+
+    $default  reduce using rule 12 (N_EXPRESSION)
+
+
+State 22
+
+    7 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+    8             | N_EXPRESSION • '-' N_EXPRESSION
+    9             | N_EXPRESSION • '*' N_EXPRESSION
+   10             | N_EXPRESSION • '/' N_EXPRESSION
+   11             | '(' N_EXPRESSION • ')'
+
+    '-'  shift, and go to state 23
+    '+'  shift, and go to state 24
+    '*'  shift, and go to state 25
+    '/'  shift, and go to state 26
+    ')'  shift, and go to state 29
+
+
+State 23
+
+    8 N_EXPRESSION: N_EXPRESSION '-' • N_EXPRESSION
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+    T_IDENTIFIER    shift, and go to state 14
+    '-'             shift, and go to state 15
+    '('             shift, and go to state 16
+
+    N_CONSTANT_VALUE  go to state 17
+    N_EXPRESSION      go to state 30
+
+
+State 24
+
+    7 N_EXPRESSION: N_EXPRESSION '+' • N_EXPRESSION
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+    T_IDENTIFIER    shift, and go to state 14
+    '-'             shift, and go to state 15
+    '('             shift, and go to state 16
+
+    N_CONSTANT_VALUE  go to state 17
+    N_EXPRESSION      go to state 31
+
+
+State 25
+
+    9 N_EXPRESSION: N_EXPRESSION '*' • N_EXPRESSION
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+    T_IDENTIFIER    shift, and go to state 14
+    '-'             shift, and go to state 15
+    '('             shift, and go to state 16
+
+    N_CONSTANT_VALUE  go to state 17
+    N_EXPRESSION      go to state 32
+
+
+State 26
+
+   10 N_EXPRESSION: N_EXPRESSION '/' • N_EXPRESSION
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+    T_IDENTIFIER    shift, and go to state 14
+    '-'             shift, and go to state 15
+    '('             shift, and go to state 16
+
+    N_CONSTANT_VALUE  go to state 17
+    N_EXPRESSION      go to state 33
+
+
+State 27
+
+    7 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+    8             | N_EXPRESSION • '-' N_EXPRESSION
+    9             | N_EXPRESSION • '*' N_EXPRESSION
+   10             | N_EXPRESSION • '/' N_EXPRESSION
+   18 N_PARAMETERS: N_EXPRESSION • ',' N_PARAMETERS
+   19             | N_EXPRESSION •
+
+    '-'  shift, and go to state 23
+    '+'  shift, and go to state 24
+    '*'  shift, and go to state 25
+    '/'  shift, and go to state 26
+    ','  shift, and go to state 34
+
+    $default  reduce using rule 19 (N_PARAMETERS)
+
+
+State 28
+
+   15 N_EXPRESSION: T_IDENTIFIER '(' N_PARAMETERS • ')'
+
+    ')'  shift, and go to state 35
+
+
+State 29
+
+   11 N_EXPRESSION: '(' N_EXPRESSION ')' •
+
+    $default  reduce using rule 11 (N_EXPRESSION)
+
+
+State 30
+
+    7 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+    8             | N_EXPRESSION • '-' N_EXPRESSION
+    8             | N_EXPRESSION '-' N_EXPRESSION •
+    9             | N_EXPRESSION • '*' N_EXPRESSION
+   10             | N_EXPRESSION • '/' N_EXPRESSION
+
+    '*'  shift, and go to state 25
+    '/'  shift, and go to state 26
+
+    $default  reduce using rule 8 (N_EXPRESSION)
+
+
+State 31
+
+    7 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+    7             | N_EXPRESSION '+' N_EXPRESSION •
+    8             | N_EXPRESSION • '-' N_EXPRESSION
+    9             | N_EXPRESSION • '*' N_EXPRESSION
+   10             | N_EXPRESSION • '/' N_EXPRESSION
+
+    '*'  shift, and go to state 25
+    '/'  shift, and go to state 26
+
+    $default  reduce using rule 7 (N_EXPRESSION)
+
+
+State 32
+
+    7 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+    8             | N_EXPRESSION • '-' N_EXPRESSION
+    9             | N_EXPRESSION • '*' N_EXPRESSION
+    9             | N_EXPRESSION '*' N_EXPRESSION •
+   10             | N_EXPRESSION • '/' N_EXPRESSION
+
+    $default  reduce using rule 9 (N_EXPRESSION)
+
+
+State 33
+
+    7 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+    8             | N_EXPRESSION • '-' N_EXPRESSION
+    9             | N_EXPRESSION • '*' N_EXPRESSION
+   10             | N_EXPRESSION • '/' N_EXPRESSION
+   10             | N_EXPRESSION '/' N_EXPRESSION •
+
+    $default  reduce using rule 10 (N_EXPRESSION)
+
+
+State 34
+
+   18 N_PARAMETERS: N_EXPRESSION ',' • N_PARAMETERS
+
+    T_INT_NUMBER    shift, and go to state 7
+    T_CHAR_VALUE    shift, and go to state 8
+    T_FLOAT_NUMBER  shift, and go to state 9
+    T_BOOL_VALUE    shift, and go to state 10
+    T_IDENTIFIER    shift, and go to state 14
+    '-'             shift, and go to state 15
+    '('             shift, and go to state 16
+
+    N_CONSTANT_VALUE  go to state 17
+    N_EXPRESSION      go to state 27
+    N_PARAMETERS      go to state 36
+
+
+State 35
+
+   15 N_EXPRESSION: T_IDENTIFIER '(' N_PARAMETERS ')' •
+
+    $default  reduce using rule 15 (N_EXPRESSION)
+
+
+State 36
+
+   18 N_PARAMETERS: N_EXPRESSION ',' N_PARAMETERS •
+
+    $default  reduce using rule 18 (N_PARAMETERS)
