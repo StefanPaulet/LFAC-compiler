@@ -3,12 +3,12 @@
 
 #include "TreeNode.hpp"
 
-#include <string>
+#include <string.h>
 
 class TreeNodeIdentifier : public TreeNode {
 
 private:
-    std :: string _name { };
+    char const * _name { nullptr };
 
 public:
     TreeNodeIdentifier () = default;
@@ -20,13 +20,13 @@ public:
         }
 
     TreeNodeIdentifier (
-        _OPERATORS   label,
-        unsigned int childCount,
-        TreeNode * * pChildList,
-        std :: string && name
+        _OPERATORS      label,
+        unsigned int    childCount,
+        TreeNode * *    pChildList,
+        char const *    name
     ) : 
         TreeNode ( label, childCount, pChildList ),
-        _name    ( std :: move ( name ) ) {
+        _name    ( strdup ( name ) ) {
 
         }
 };

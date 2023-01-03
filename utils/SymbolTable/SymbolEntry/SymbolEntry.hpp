@@ -1,12 +1,13 @@
 #ifndef __SYMBOL_ENTRY_HPP__
 #define __SYMBOL_ENTRY_HPP__
 
+#include <string.h>
 #include <string>
 
 class SymbolEntry {
     
-    std :: string _name { };
-    std :: string _type { };
+protected:
+    char const * _pName { nullptr };
     
 public:
     SymbolEntry () = delete;
@@ -14,23 +15,23 @@ public:
     SymbolEntry ( SymbolEntry && entry ) = delete;
 
     SymbolEntry (
-        std :: string && pname,
-        std :: string && ptype
+        char const * pName
     ) :
-        _name ( std :: move ( pname ) ),
-        _type ( std :: move ( ptype ) ) {
+        _pName ( strdup ( pName ) ) {
 
         }
 
+    ~SymbolEntry () {
 
-    constexpr auto getName () const -> std :: string const & { 
-        return this->_name;
+        delete this->_pName;
     }
 
 
-    constexpr auto getType () const -> std :: string const & {
-        return this->_type;
+    auto constexpr getName () const -> char const * const { 
+        return this->_pName;
     }
+
+    virtual auto getType () const -> std :: string = 0;
 };
 
 #endif //__SYMBOL_ENTRY_HPP__
