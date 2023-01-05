@@ -11,8 +11,6 @@ int yyerror (char const * errorString) {
 
 int main (int argc, char ** argv) {
 
-    // buildSymbolTable();
-
     yyin = fopen ("test", "r");
     yyparse();
 

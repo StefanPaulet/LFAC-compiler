@@ -13,12 +13,8 @@ whitespace      [\n\t ]
 digit           [0-9]
 letter          [a-zA-Z]
 
-INT          int
-FLOAT        float
-CHAR         char
-BOOL         bool
-STRING       string
-
+Type int|float|char|bool|string
+Class class
 
 IntNumber    (0|[1-9]{digit}*)
 FloatNumber  {IntNumber}\.{IntNumber}
@@ -43,6 +39,19 @@ Identifier   ({letter}|_)({letter}|{digit}|_)*
 
 {BoolValue} {
     return ( T_BOOL_VALUE );
+}
+
+{StringValue} {
+    return ( T_STRING_VALUE );
+}
+
+{Class} {
+    return ( T_CLASS );
+}
+
+{Type} {
+    yylval.stringValue = strdup ( yytext );
+    return ( T_TYPE );
 }
 
 "main" {

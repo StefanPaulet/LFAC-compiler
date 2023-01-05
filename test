@@ -1,4 +1,18 @@
-a = 5;
-b = 6
-main
-f ( a + b, 543 
+int a;
+float b;
+class A {
+
+};
+class B {
+    int a;
+    int b;
+};
+B c;
+class VeryComplexClass {
+    B d;
+    float a;
+    string e;
+};
+VeryComplexClass ceva;
+int ceva;
+main() { }

@@ -69,15 +69,33 @@
 /* First part of user prologue.  */
 #line 1 "compiler.ypp"
 
-    #include <stdio.h>
-    #include <string.h>
-    #include <stdlib.h>
+    #include <iostream>
     #include "main.hpp"
+
     extern "C" {
         int yylex ( void );
     }  
 
-#line 81 "compiler.cpp"
+    #include "../utilities/Scope/Scope.hpp"
+    #include "../utilities/Scope/impl/Scope.hpp"
+    
+    Scope * pGlobalScope = new Scope ( 
+            nullptr,
+            nullptr,
+            new TypeTable (
+                new TypeTable :: TypeList {
+                    new TypeEntry ( "char", 1 ),
+                    new TypeEntry ( "bool", 1 ),
+                    new TypeEntry ( "float", 4 ),
+                    new TypeEntry ( "int", 4 ),
+                    new TypeEntry ( "string", 8 )
+                }
+            )
+    );
+
+    Scope * pCurrentScope = pGlobalScope;
+
+#line 99 "compiler.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -112,25 +130,28 @@ enum yysymbol_kind_t
   YYSYMBOL_T_CHAR_VALUE = 4,               /* T_CHAR_VALUE  */
   YYSYMBOL_T_FLOAT_NUMBER = 5,             /* T_FLOAT_NUMBER  */
   YYSYMBOL_T_BOOL_VALUE = 6,               /* T_BOOL_VALUE  */
-  YYSYMBOL_T_MAIN_IDENTIFIER = 7,          /* T_MAIN_IDENTIFIER  */
-  YYSYMBOL_T_IDENTIFIER = 8,               /* T_IDENTIFIER  */
-  YYSYMBOL_9_ = 9,                         /* '-'  */
-  YYSYMBOL_10_ = 10,                       /* '+'  */
-  YYSYMBOL_11_ = 11,                       /* '*'  */
-  YYSYMBOL_12_ = 12,                       /* '/'  */
-  YYSYMBOL_UMINUS = 13,                    /* UMINUS  */
-  YYSYMBOL_14_ = 14,                       /* '('  */
-  YYSYMBOL_15_ = 15,                       /* ')'  */
-  YYSYMBOL_16_ = 16,                       /* '='  */
-  YYSYMBOL_17_ = 17,                       /* ';'  */
-  YYSYMBOL_18_ = 18,                       /* ','  */
-  YYSYMBOL_YYACCEPT = 19,                  /* $accept  */
-  YYSYMBOL_N_START = 20,                   /* N_START  */
-  YYSYMBOL_21_1 = 21,                      /* $@1  */
-  YYSYMBOL_N_CONSTANT_VALUE = 22,          /* N_CONSTANT_VALUE  */
-  YYSYMBOL_N_EXPRESSION = 23,              /* N_EXPRESSION  */
-  YYSYMBOL_N_DECLARATION = 24,             /* N_DECLARATION  */
-  YYSYMBOL_N_PARAMETERS = 25               /* N_PARAMETERS  */
+  YYSYMBOL_T_STRING_VALUE = 7,             /* T_STRING_VALUE  */
+  YYSYMBOL_T_MAIN_IDENTIFIER = 8,          /* T_MAIN_IDENTIFIER  */
+  YYSYMBOL_T_CLASS = 9,                    /* T_CLASS  */
+  YYSYMBOL_T_TYPE = 10,                    /* T_TYPE  */
+  YYSYMBOL_T_IDENTIFIER = 11,              /* T_IDENTIFIER  */
+  YYSYMBOL_12_ = 12,                       /* '-'  */
+  YYSYMBOL_13_ = 13,                       /* '+'  */
+  YYSYMBOL_14_ = 14,                       /* '*'  */
+  YYSYMBOL_15_ = 15,                       /* '/'  */
+  YYSYMBOL_UMINUS = 16,                    /* UMINUS  */
+  YYSYMBOL_17_ = 17,                       /* '('  */
+  YYSYMBOL_18_ = 18,                       /* ')'  */
+  YYSYMBOL_19_ = 19,                       /* '{'  */
+  YYSYMBOL_20_ = 20,                       /* '}'  */
+  YYSYMBOL_21_ = 21,                       /* ';'  */
+  YYSYMBOL_22_ = 22,                       /* ','  */
+  YYSYMBOL_YYACCEPT = 23,                  /* $accept  */
+  YYSYMBOL_N_START = 24,                   /* N_START  */
+  YYSYMBOL_N_DECLARATION = 25,             /* N_DECLARATION  */
+  YYSYMBOL_N_CLASS_DECLARATION = 26,       /* N_CLASS_DECLARATION  */
+  YYSYMBOL_27_1 = 27,                      /* $@1  */
+  YYSYMBOL_M_CLASS_BLOCK_BEGIN = 28        /* M_CLASS_BLOCK_BEGIN  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -456,21 +477,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  5
+#define YYFINAL  3
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   43
+#define YYLAST   26
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  19
+#define YYNTOKENS  23
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  7
+#define YYNNTS  6
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  20
+#define YYNRULES  9
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  37
+#define YYNSTATES  24
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   264
+#define YYMAXUTOK   267
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -488,15 +509,15 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      14,    15,    11,    10,    18,     9,     2,    12,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    17,
-       2,    16,     2,     2,     2,     2,     2,     2,     2,     2,
+      17,    18,    14,    13,    22,    12,     2,    15,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,    21,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,    19,     2,    20,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -510,16 +531,14 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,    13
+       5,     6,     7,     8,     9,    10,    11,    16
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_int8 yyrline[] =
+static const yytype_uint8 yyrline[] =
 {
-       0,    41,    41,    41,    46,    47,    48,    49,    52,    53,
-      54,    55,    56,    57,    58,    59,    60,    64,    65,    68,
-      69
+       0,    72,    72,   104,   107,   110,   110,   117,   114,   129
 };
 #endif
 
@@ -536,10 +555,11 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
 static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "T_INT_NUMBER",
-  "T_CHAR_VALUE", "T_FLOAT_NUMBER", "T_BOOL_VALUE", "T_MAIN_IDENTIFIER",
-  "T_IDENTIFIER", "'-'", "'+'", "'*'", "'/'", "UMINUS", "'('", "')'",
-  "'='", "';'", "','", "$accept", "N_START", "$@1", "N_CONSTANT_VALUE",
-  "N_EXPRESSION", "N_DECLARATION", "N_PARAMETERS", YY_NULLPTR
+  "T_CHAR_VALUE", "T_FLOAT_NUMBER", "T_BOOL_VALUE", "T_STRING_VALUE",
+  "T_MAIN_IDENTIFIER", "T_CLASS", "T_TYPE", "T_IDENTIFIER", "'-'", "'+'",
+  "'*'", "'/'", "UMINUS", "'('", "')'", "'{'", "'}'", "';'", "','",
+  "$accept", "N_START", "N_DECLARATION", "N_CLASS_DECLARATION", "$@1",
+  "M_CLASS_BLOCK_BEGIN", YY_NULLPTR
 };
 
 static const char *
@@ -549,7 +569,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-13)
+#define YYPACT_NINF (-10)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -563,10 +583,9 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-       1,    -6,    19,   -13,     2,   -13,    31,   -13,   -13,   -13,
-     -13,    15,    12,     1,    26,    12,    12,   -13,    25,   -13,
-      12,   -13,    18,    12,    12,    12,    12,    13,    24,   -13,
-     -10,   -10,   -13,   -13,    12,   -13,   -13
+     -10,     7,    -5,   -10,    -8,    -3,    -1,     1,   -10,    -4,
+      -6,    -2,     0,     3,   -10,   -10,   -10,     4,   -10,   -10,
+      -9,   -10,     2,   -10
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -574,22 +593,21 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,     0,     2,     0,     1,     0,     4,     6,     5,
-       7,     0,     0,    18,    15,     0,     0,    14,     3,    17,
-       0,    13,     0,     0,     0,     0,     0,    20,     0,    12,
-       9,     8,    10,    11,     0,    16,    19
+       6,     0,     0,     1,     0,     0,     0,     0,     5,     0,
+       0,     0,     0,     0,     9,     3,     4,     0,     6,     2,
+       0,     7,     0,     8
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -13,   -13,   -13,    37,   -12,    29,     9
+     -10,   -10,     8,   -10,   -10,   -10
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     2,     6,    17,    27,     3,    28
+       0,     1,     2,     8,    22,    18
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -597,46 +615,37 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      18,    25,    26,    21,    22,     7,     8,     9,    10,     1,
-       4,    30,    31,    32,    33,     7,     8,     9,    10,     5,
-      14,    15,    23,    24,    25,    26,    16,    23,    24,    25,
-      26,    34,    13,    29,    23,    24,    25,    26,    12,    35,
-      20,    11,    19,    36
+       5,     6,     7,     4,     5,     6,     7,     3,    10,     9,
+      11,    21,    12,    14,    13,     0,     0,     0,     0,    15,
+       0,    16,    17,    23,    19,     0,    20
 };
 
 static const yytype_int8 yycheck[] =
 {
-      12,    11,    12,    15,    16,     3,     4,     5,     6,     8,
-      16,    23,    24,    25,    26,     3,     4,     5,     6,     0,
-       8,     9,     9,    10,    11,    12,    14,     9,    10,    11,
-      12,    18,    17,    15,     9,    10,    11,    12,     7,    15,
-      14,     4,    13,    34
+       9,    10,    11,     8,     9,    10,    11,     0,    11,    17,
+      11,    20,    11,    19,    18,    -1,    -1,    -1,    -1,    21,
+      -1,    21,    19,    21,    20,    -1,    18
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     8,    20,    24,    16,     0,    21,     3,     4,     5,
-       6,    22,     7,    17,     8,     9,    14,    22,    23,    24,
-      14,    23,    23,     9,    10,    11,    12,    23,    25,    15,
-      23,    23,    23,    23,    18,    15,    25
+       0,    24,    25,     0,     8,     9,    10,    11,    26,    17,
+      11,    11,    11,    18,    19,    21,    21,    19,    28,    20,
+      25,    20,    27,    21
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    19,    21,    20,    22,    22,    22,    22,    23,    23,
-      23,    23,    23,    23,    23,    23,    23,    24,    24,    25,
-      25
+       0,    23,    24,    25,    25,    25,    25,    27,    26,    28
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     0,     4,     1,     1,     1,     1,     3,     3,
-       3,     3,     3,     2,     1,     1,     4,     5,     4,     3,
-       1
+       0,     2,     6,     4,     4,     2,     0,     0,     8,     0
 };
 
 
@@ -1099,32 +1108,59 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2: /* $@1: %empty  */
-#line 41 "compiler.ypp"
-                  { printf ( "Start of declarations\n" ); }
-#line 1106 "compiler.cpp"
-    break;
-
-  case 3: /* N_START: N_DECLARATION $@1 T_MAIN_IDENTIFIER N_EXPRESSION  */
-#line 43 "compiler.ypp"
-                 { printf ( "Expression evaluated\n" ); }
-#line 1112 "compiler.cpp"
-    break;
-
-  case 12: /* N_EXPRESSION: '(' N_EXPRESSION ')'  */
-#line 56 "compiler.ypp"
-                         {}
-#line 1118 "compiler.cpp"
-    break;
-
-  case 13: /* N_EXPRESSION: '-' N_EXPRESSION  */
-#line 57 "compiler.ypp"
-                                  {}
+  case 2: /* N_START: N_DECLARATION T_MAIN_IDENTIFIER '(' ')' '{' '}'  */
+#line 73 "compiler.ypp"
+                                      { 
+        std :: cout << "Vars:\n";
+        for ( auto e : * pGlobalScope->getSymbolTable()->getSymbols() ) {
+            std :: cout << e->getTypeName() << ' ' << e->getName() << '\n'; 
+        }
+        std :: cout << "\nType:\n";
+        for ( auto e : * pGlobalScope->getTypeTable()->getTypes() ) {
+            std :: cout << e->getName() << ' ' << e->getLength() << '\n'; 
+        }  
+    }
 #line 1124 "compiler.cpp"
     break;
 
+  case 3: /* N_DECLARATION: N_DECLARATION T_TYPE T_IDENTIFIER ';'  */
+#line 104 "compiler.ypp"
+                                          {
+        pCurrentScope->addVariable ( (yyvsp[-2].stringValue), (yyvsp[-1].stringValue) );
+    }
+#line 1132 "compiler.cpp"
+    break;
 
-#line 1128 "compiler.cpp"
+  case 4: /* N_DECLARATION: N_DECLARATION T_IDENTIFIER T_IDENTIFIER ';'  */
+#line 107 "compiler.ypp"
+                                                {
+        pCurrentScope->addVariable ( (yyvsp[-2].stringValue), (yyvsp[-1].stringValue) );
+    }
+#line 1140 "compiler.cpp"
+    break;
+
+  case 7: /* $@1: %empty  */
+#line 117 "compiler.ypp"
+        {
+        auto classScope = pCurrentScope;
+        pCurrentScope = pCurrentScope->getUpperScope();
+        auto pNewEntry = pCurrentScope->addUserDefinedType ( (yyvsp[-4].stringValue), classScope );
+        pCurrentScope->setUserDefinedTypeLength ( pNewEntry );
+    }
+#line 1151 "compiler.cpp"
+    break;
+
+  case 9: /* M_CLASS_BLOCK_BEGIN: %empty  */
+#line 129 "compiler.ypp"
+                     { 
+        auto newScope = new Scope ( pCurrentScope, pGlobalScope );
+        pCurrentScope = newScope; 
+    }
+#line 1160 "compiler.cpp"
+    break;
+
+
+#line 1164 "compiler.cpp"
 
       default: break;
     }
@@ -1317,4 +1353,4 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 71 "compiler.ypp"
+#line 134 "compiler.ypp"

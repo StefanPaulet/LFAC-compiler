@@ -1,8 +1,8 @@
 #ifndef __SYMBOL_TABLE_HPP__
 #define __SYMBOL_TABLE_HPP__
 
-#include "VariableEntry/VariableEntry.hpp"
-#include "FunctionEntry/FunctionEntry.hpp"
+#include "SymbolEntry/VariableEntry/VariableEntry.hpp"
+#include "SymbolEntry/FunctionEntry/FunctionEntry.hpp"
 
 
 class SymbolTable {
@@ -19,26 +19,17 @@ public:
 
     auto addSymbol (
         SymbolEntry * pNewSymbol 
-    ) -> void {
-        
-        this->_pSymbolList->push_back ( pNewSymbol );
-    }
+    ) -> void;
 
 
     auto lookUpSymbol ( 
         char const * pSymbolName
-    ) -> SymbolEntry * {
-        
-        for ( auto e : * this->_pSymbolList ) {
-            if ( ! strcmp ( e->getName(), pSymbolName ) ) {
-                return e;
-            }
-        }
+    ) -> SymbolEntry *;
 
-        return nullptr;
-    }
-
-
+    auto getSymbols () -> SymbolList const *; 
 };
+
+#include "SymbolEntry/VariableEntry/impl/VariableEntry.hpp"
+#include "SymbolEntry/FunctionEntry/impl/FunctionEntry.hpp"
 
 #endif //__SYMBOL_TABLE_HPP__

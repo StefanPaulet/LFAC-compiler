@@ -1,14 +1,17 @@
-#ifndef __TYPE_ENTRY_HPP
-#define __TYPE_ENTRY_HPP
+#ifndef __TYPE_ENTRY_HPP__
+#define __TYPE_ENTRY_HPP__
 
 #include <string.h>
 
 class TypeEntry {
 
+public:
+    using TypeLength = unsigned short int;
+
 protected:
     char const * _pName { nullptr };
 
-    unsigned short int _length { 0 };
+    TypeLength _length { 0 };
 
 public:
     TypeEntry () = delete;
@@ -17,27 +20,39 @@ public:
 
     TypeEntry ( 
         char const * pName 
-    ) : _pName ( pName ) {
+    ) : _pName ( strdup ( pName ) ) {
 
     }
 
 
     TypeEntry ( 
         char const * pName,
-        unsigned short int length
+        TypeLength   length
     ) : 
         _pName  ( strdup ( pName ) ),
         _length ( length ) {
 
         }
 
-    constexpr auto getTypeName () const -> char const * const {
+
+    constexpr auto getName () const -> char const * const {
+        
         return this->_pName;
     }
 
-    constexpr auto getTypeLength () const -> unsigned short int {
+
+    constexpr auto getLength () const -> TypeLength {
+
         return this->_length;
+    }
+
+
+    auto setLength (
+        TypeLength length
+    ) -> void {
+
+        this->_length = length;
     }
 };
 
-#endif //__TYPE_ENTRY_HPP
+#endif //__TYPE_ENTRY_HPP__

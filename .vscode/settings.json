@@ -1,6 +1,10 @@
 {
     "files.associations": {
         "inttypes.h": "c",
-        "new": "cpp"
+        "new": "cpp",
+        "deque": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "test": "cpp"
     }
 }

@@ -28,10 +28,12 @@ public:
 
 
     auto constexpr getName () const -> char const * const { 
+
         return this->_pName;
     }
 
-    virtual auto getType () const -> std :: string = 0;
+
+    virtual auto getTypeName () const -> std :: string = 0;
 };
 
 #endif //__SYMBOL_ENTRY_HPP__

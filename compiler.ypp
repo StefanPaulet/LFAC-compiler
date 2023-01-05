@@ -1,11 +1,29 @@
 %{
-    #include <stdio.h>
-    #include <string.h>
-    #include <stdlib.h>
+    #include <iostream>
     #include "main.hpp"
+
     extern "C" {
         int yylex ( void );
     }  
+
+    #include "../utilities/Scope/Scope.hpp"
+    #include "../utilities/Scope/impl/Scope.hpp"
+    
+    Scope * pGlobalScope = new Scope ( 
+            nullptr,
+            nullptr,
+            new TypeTable (
+                new TypeTable :: TypeList {
+                    new TypeEntry ( "char", 1 ),
+                    new TypeEntry ( "bool", 1 ),
+                    new TypeEntry ( "float", 4 ),
+                    new TypeEntry ( "int", 4 ),
+                    new TypeEntry ( "string", 8 )
+                }
+            )
+    );
+
+    Scope * pCurrentScope = pGlobalScope;
 %}
 
 %union {
@@ -14,20 +32,33 @@
     char charValue;
     char boolValue;
     char const * stringValue;
+    
+#ifdef __cplusplus
+    Scope * scopeValue;
+#endif
 }
     
 
-%token <intValue>        T_INT_NUMBER
-%token <intValue>       T_CHAR_VALUE
-%token <intValue>      T_FLOAT_NUMBER
-%token <intValue>       T_BOOL_VALUE
-%token <intValue>       T_MAIN_IDENTIFIER
+%token <intValue>      T_INT_NUMBER
+%token <charValue>     T_CHAR_VALUE
+%token <floatValue>    T_FLOAT_NUMBER
+%token <boolValue>     T_BOOL_VALUE
+%token <stringValue>   T_STRING_VALUE
 
-%token <intValue> T_IDENTIFIER
-%nterm <intValue> N_DECLARATION
+%token T_MAIN_IDENTIFIER
+%token T_CLASS
+
+%token <stringValue> T_TYPE
+%token <stringValue> T_IDENTIFIER
+
+%nterm <scopeValue> N_DECLARATION
 %nterm <intValue> N_EXPRESSION
 %nterm <intValue> N_PARAMETERS
 %nterm <intValue> N_CONSTANT_VALUE
+
+%nterm <stringValue> M_CLASS_BLOCK_BEGIN
+
+%nterm <scopeValue> N_CLASS_DECLARATION
 
 %left '-' '+'
 %left '*' '/' 
@@ -38,15 +69,24 @@
 %%
 
 N_START:
-    N_DECLARATION { printf ( "Start of declarations\n" ); }
-    T_MAIN_IDENTIFIER
-    N_EXPRESSION { printf ( "Expression evaluated\n" ); };
+    N_DECLARATION
+    T_MAIN_IDENTIFIER '(' ')' '{' '}' { 
+        std :: cout << "Vars:\n";
+        for ( auto e : * pGlobalScope->getSymbolTable()->getSymbols() ) {
+            std :: cout << e->getTypeName() << ' ' << e->getName() << '\n'; 
+        }
+        std :: cout << "\nType:\n";
+        for ( auto e : * pGlobalScope->getTypeTable()->getTypes() ) {
+            std :: cout << e->getName() << ' ' << e->getLength() << '\n'; 
+        }  
+    }
 
 N_CONSTANT_VALUE :
     T_INT_NUMBER |
     T_FLOAT_NUMBER |
     T_CHAR_VALUE |
-    T_BOOL_VALUE;
+    T_BOOL_VALUE |
+    T_STRING_VALUE
 
 N_EXPRESSION: 
     N_EXPRESSION '+' N_EXPRESSION |
@@ -57,15 +97,38 @@ N_EXPRESSION:
     '-' N_EXPRESSION %prec UMINUS {} |
     N_CONSTANT_VALUE |
     T_IDENTIFIER |
-    T_IDENTIFIER '(' N_PARAMETERS ')';
+    T_IDENTIFIER '(' N_PARAMETERS ')' { }
     
 
 N_DECLARATION:
-    T_IDENTIFIER '=' N_CONSTANT_VALUE ';' N_DECLARATION |
-    T_IDENTIFIER '=' N_CONSTANT_VALUE ';';
+    N_DECLARATION T_TYPE T_IDENTIFIER ';' {
+        pCurrentScope->addVariable ( $2, $3 );
+    } |
+    N_DECLARATION T_IDENTIFIER T_IDENTIFIER ';' {
+        pCurrentScope->addVariable ( $2, $3 );
+    } |
+    N_DECLARATION N_CLASS_DECLARATION |
+    ;
+
+N_CLASS_DECLARATION:
+    T_CLASS T_IDENTIFIER '{' 
+    M_CLASS_BLOCK_BEGIN
+    N_DECLARATION
+    '}' {
+        auto classScope = pCurrentScope;
+        pCurrentScope = pCurrentScope->getUpperScope();
+        auto pNewEntry = pCurrentScope->addUserDefinedType ( $2, classScope );
+        pCurrentScope->setUserDefinedTypeLength ( pNewEntry );
+    } 
+    ';'
 
 N_PARAMETERS:
     N_EXPRESSION ',' N_PARAMETERS |
-    N_EXPRESSION;
+    N_EXPRESSION
+
+M_CLASS_BLOCK_BEGIN: { 
+        auto newScope = new Scope ( pCurrentScope, pGlobalScope );
+        pCurrentScope = newScope; 
+    }
 
 %%

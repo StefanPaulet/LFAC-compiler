@@ -58,9 +58,12 @@ extern int yydebug;
     T_CHAR_VALUE = 259,            /* T_CHAR_VALUE  */
     T_FLOAT_NUMBER = 260,          /* T_FLOAT_NUMBER  */
     T_BOOL_VALUE = 261,            /* T_BOOL_VALUE  */
-    T_MAIN_IDENTIFIER = 262,       /* T_MAIN_IDENTIFIER  */
-    T_IDENTIFIER = 263,            /* T_IDENTIFIER  */
-    UMINUS = 264                   /* UMINUS  */
+    T_STRING_VALUE = 262,          /* T_STRING_VALUE  */
+    T_MAIN_IDENTIFIER = 263,       /* T_MAIN_IDENTIFIER  */
+    T_CLASS = 264,                 /* T_CLASS  */
+    T_TYPE = 265,                  /* T_TYPE  */
+    T_IDENTIFIER = 266,            /* T_IDENTIFIER  */
+    UMINUS = 267                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -69,15 +72,19 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 11 "compiler.ypp"
+#line 29 "compiler.ypp"
 
     int intValue;
     float floatValue;
     char charValue;
     char boolValue;
     char const * stringValue;
+    
+#ifdef __cplusplus
+    Scope * scopeValue;
+#endif
 
-#line 81 "compiler.hpp"
+#line 88 "compiler.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
