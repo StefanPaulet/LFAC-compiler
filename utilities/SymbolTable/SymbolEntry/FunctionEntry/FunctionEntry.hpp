@@ -3,6 +3,7 @@
 
 #include "../SymbolEntry.hpp"
 #include "../../../AbstractSyntaxTree/TreeNodeIdentifier.hpp"
+#include "../../../TypeTable/TypeEntry/TypeEntry.hpp"
 #include <list>
 #include <utility>
 #include <stdio.h>
@@ -10,10 +11,10 @@
 class FunctionEntry : public SymbolEntry {
 
 public:
-    using ParameterList  = std :: list < char const * >;
+    using ParameterList  = std :: list < TypeEntry * >;
     
 private:
-    char const * _pReturnType;
+    TypeEntry * _pReturnType;
 
     TreeNodeIdentifier * _pFunctionBody;
 
@@ -23,7 +24,7 @@ public:
 
     FunctionEntry ( 
         char const              * pname,
-        char const              * pReturnType,
+        TypeEntry               * pReturnType,
         TreeNodeIdentifier      * pFunctionBody,
         ParameterList           * pParameterList
     );

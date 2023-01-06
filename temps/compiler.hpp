@@ -72,7 +72,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 29 "compiler.ypp"
+#line 30 "compiler.ypp"
 
     int intValue;
     float floatValue;
@@ -81,10 +81,12 @@ union YYSTYPE
     char const * stringValue;
     
 #ifdef __cplusplus
-    Scope * scopeValue;
+    Scope * pScope;
+    FunctionEntry :: ParameterList * pParamList;
+    std :: list < char const * > * pStringList;
 #endif
 
-#line 88 "compiler.hpp"
+#line 90 "compiler.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

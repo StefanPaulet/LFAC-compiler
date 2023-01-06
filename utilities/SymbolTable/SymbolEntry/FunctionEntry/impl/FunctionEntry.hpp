@@ -3,7 +3,7 @@
 
 FunctionEntry :: FunctionEntry ( 
         char const              * pname,
-        char const              * pReturnType,
+        TypeEntry               * pReturnType,
         TreeNodeIdentifier      * pFunctionBody,
         ParameterList           * pParameterList
 ) : 
@@ -30,16 +30,16 @@ FunctionEntry :: ~FunctionEntry () {
 
 auto FunctionEntry :: getTypeName () const -> std :: string {
 
-    std :: string s ( this->_pReturnType );
+    std :: string s ( this->_pReturnType->getName() );
     s += '(';
     for ( auto e = this->_pParameterList->begin(); e != this->_pParameterList->end(); ++ e ) {
-        s += * e;
-        if ( e == this->_pParameterList->end() ) {
-            s += ")";
-        } else {
-            s += ", ";
-        }
+        s += (* e)->getName();
+        s += ",";
     }
+    if ( ! this->_pParameterList->empty() ) {
+        s.pop_back();
+    }
+    s += ")";
     return s;
 }
 

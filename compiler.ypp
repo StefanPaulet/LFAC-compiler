@@ -14,6 +14,7 @@
             nullptr,
             new TypeTable (
                 new TypeTable :: TypeList {
+                    new TypeEntry ( "noTypeFunctionParameter", 0 ),
                     new TypeEntry ( "char", 1 ),
                     new TypeEntry ( "bool", 1 ),
                     new TypeEntry ( "float", 4 ),
@@ -34,7 +35,9 @@
     char const * stringValue;
     
 #ifdef __cplusplus
-    Scope * scopeValue;
+    Scope * pScope;
+    FunctionEntry :: ParameterList * pParamList;
+    std :: list < char const * > * pStringList;
 #endif
 }
     
@@ -51,14 +54,19 @@
 %token <stringValue> T_TYPE
 %token <stringValue> T_IDENTIFIER
 
-%nterm <scopeValue> N_DECLARATION
+%nterm <stringValue> N_MIXED_TYPE
+
 %nterm <intValue> N_EXPRESSION
-%nterm <intValue> N_PARAMETERS
 %nterm <intValue> N_CONSTANT_VALUE
 
+%nterm <pScope> N_DECLARATION
+
+%nterm <pScope> N_CLASS_DECLARATION
 %nterm <stringValue> M_CLASS_BLOCK_BEGIN
 
-%nterm <scopeValue> N_CLASS_DECLARATION
+%nterm <pScope> N_FUNCTION_DECLARATION
+%nterm <pStringList> N_PARAMETER
+%nterm <pStringList> N_PARAMETER_LIST
 
 %left '-' '+'
 %left '*' '/' 
@@ -70,14 +78,14 @@
 
 N_START:
     N_DECLARATION
-    T_MAIN_IDENTIFIER '(' ')' '{' '}' { 
+    T_TYPE T_MAIN_IDENTIFIER '(' ')' '{' '}' { 
         std :: cout << "Vars:\n";
         for ( auto e : * pGlobalScope->getSymbolTable()->getSymbols() ) {
             std :: cout << e->getTypeName() << ' ' << e->getName() << '\n'; 
         }
         std :: cout << "\nType:\n";
         for ( auto e : * pGlobalScope->getTypeTable()->getTypes() ) {
-            std :: cout << e->getName() << ' ' << e->getLength() << '\n'; 
+            std :: cout << e->getName() << ' ' << e->getLength() << ' ' << '\n'; 
         }  
     }
 
@@ -87,6 +95,10 @@ N_CONSTANT_VALUE :
     T_CHAR_VALUE |
     T_BOOL_VALUE |
     T_STRING_VALUE
+    
+N_MIXED_TYPE:
+    T_TYPE |
+    T_IDENTIFIER;
 
 N_EXPRESSION: 
     N_EXPRESSION '+' N_EXPRESSION |
@@ -97,17 +109,15 @@ N_EXPRESSION:
     '-' N_EXPRESSION %prec UMINUS {} |
     N_CONSTANT_VALUE |
     T_IDENTIFIER |
-    T_IDENTIFIER '(' N_PARAMETERS ')' { }
+    T_IDENTIFIER '(' N_PARAMETER ')' { }
     
 
 N_DECLARATION:
-    N_DECLARATION T_TYPE T_IDENTIFIER ';' {
-        pCurrentScope->addVariable ( $2, $3 );
-    } |
-    N_DECLARATION T_IDENTIFIER T_IDENTIFIER ';' {
+    N_DECLARATION N_MIXED_TYPE T_IDENTIFIER ';' {
         pCurrentScope->addVariable ( $2, $3 );
     } |
     N_DECLARATION N_CLASS_DECLARATION |
+    N_DECLARATION N_FUNCTION_DECLARATION |
     ;
 
 N_CLASS_DECLARATION:
@@ -118,17 +128,36 @@ N_CLASS_DECLARATION:
         auto classScope = pCurrentScope;
         pCurrentScope = pCurrentScope->getUpperScope();
         auto pNewEntry = pCurrentScope->addUserDefinedType ( $2, classScope );
-        pCurrentScope->setUserDefinedTypeLength ( pNewEntry );
+        if ( pNewEntry != nullptr ) {
+            pCurrentScope->setUserDefinedTypeLength ( pNewEntry );
+        }
     } 
     ';'
-
-N_PARAMETERS:
-    N_EXPRESSION ',' N_PARAMETERS |
-    N_EXPRESSION
 
 M_CLASS_BLOCK_BEGIN: { 
         auto newScope = new Scope ( pCurrentScope, pGlobalScope );
         pCurrentScope = newScope; 
     }
+
+N_FUNCTION_DECLARATION: 
+    N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER ')' ';' {
+        pCurrentScope->addFunction ( $2, $1, nullptr, $4 );
+    }
+
+N_PARAMETER:
+    N_PARAMETER_LIST |
+    { $$ = new std :: list < char const * >; };
+
+N_PARAMETER_LIST:
+    N_PARAMETER_LIST ',' N_MIXED_TYPE T_IDENTIFIER {
+        $1->push_back ( $3 );
+        $$ = $1;
+    } |
+    N_MIXED_TYPE T_IDENTIFIER {
+        $$ = new std :: list < char const * >;
+        $$->push_back( $1 );
+    }
+
+
 
 %%

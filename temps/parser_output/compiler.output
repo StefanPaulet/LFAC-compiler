@@ -2,7 +2,6 @@ Nonterminals useless in grammar
 
     N_CONSTANT_VALUE
     N_EXPRESSION
-    N_PARAMETERS
 
 
 Terminals unused in grammar
@@ -16,62 +15,69 @@ Terminals unused in grammar
     '+'
     '*'
     '/'
-    ','
 
 
 Rules useless in grammar
 
-    9 N_CONSTANT_VALUE: T_INT_NUMBER
-   10                 | T_FLOAT_NUMBER
-   11                 | T_CHAR_VALUE
-   12                 | T_BOOL_VALUE
-   13                 | T_STRING_VALUE
+   16 N_CONSTANT_VALUE: T_INT_NUMBER
+   17                 | T_FLOAT_NUMBER
+   18                 | T_CHAR_VALUE
+   19                 | T_BOOL_VALUE
+   20                 | T_STRING_VALUE
 
-   14 N_EXPRESSION: N_EXPRESSION '+' N_EXPRESSION
-   15             | N_EXPRESSION '-' N_EXPRESSION
-   16             | N_EXPRESSION '*' N_EXPRESSION
-   17             | N_EXPRESSION '/' N_EXPRESSION
-   18             | '(' N_EXPRESSION ')'
-   19             | '-' N_EXPRESSION
-   20             | N_CONSTANT_VALUE
-   21             | T_IDENTIFIER
-   22             | T_IDENTIFIER '(' N_PARAMETERS ')'
-
-   23 N_PARAMETERS: N_EXPRESSION ',' N_PARAMETERS
-   24             | N_EXPRESSION
+   21 N_EXPRESSION: N_EXPRESSION '+' N_EXPRESSION
+   22             | N_EXPRESSION '-' N_EXPRESSION
+   23             | N_EXPRESSION '*' N_EXPRESSION
+   24             | N_EXPRESSION '/' N_EXPRESSION
+   25             | '(' N_EXPRESSION ')'
+   26             | '-' N_EXPRESSION
+   27             | N_CONSTANT_VALUE
+   28             | T_IDENTIFIER
+   29             | T_IDENTIFIER '(' N_PARAMETER ')'
 
 
 Grammar
 
     0 $accept: N_START $end
 
-    1 N_START: N_DECLARATION T_MAIN_IDENTIFIER '(' ')' '{' '}'
+    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' ')' '{' '}'
 
-    2 N_DECLARATION: N_DECLARATION T_TYPE T_IDENTIFIER ';'
-    3              | N_DECLARATION T_IDENTIFIER T_IDENTIFIER ';'
-    4              | N_DECLARATION N_CLASS_DECLARATION
-    5              | ε
+    2 N_MIXED_TYPE: T_TYPE
+    3             | T_IDENTIFIER
 
-    6 $@1: ε
+    4 N_DECLARATION: N_DECLARATION N_MIXED_TYPE T_IDENTIFIER ';'
+    5              | N_DECLARATION N_CLASS_DECLARATION
+    6              | N_DECLARATION N_FUNCTION_DECLARATION
+    7              | ε
 
-    7 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';'
+    8 $@1: ε
 
-    8 M_CLASS_BLOCK_BEGIN: ε
+    9 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';'
+
+   10 M_CLASS_BLOCK_BEGIN: ε
+
+   11 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER ')' ';'
+
+   12 N_PARAMETER: N_PARAMETER_LIST
+   13            | ε
+
+   14 N_PARAMETER_LIST: N_PARAMETER_LIST ',' N_MIXED_TYPE T_IDENTIFIER
+   15                 | N_MIXED_TYPE T_IDENTIFIER
 
 
 Terminals, with rules where they appear
 
     $end (0) 0
-    '(' (40) 1
-    ')' (41) 1
+    '(' (40) 1 11
+    ')' (41) 1 11
     '*' (42)
     '+' (43)
-    ',' (44)
+    ',' (44) 14
     '-' (45)
     '/' (47)
-    ';' (59) 2 3 7
-    '{' (123) 1 7
-    '}' (125) 1 7
+    ';' (59) 4 9 11
+    '{' (123) 1 9
+    '}' (125) 1 9
     error (256)
     T_INT_NUMBER <intValue> (258)
     T_CHAR_VALUE <charValue> (259)
@@ -79,9 +85,9 @@ Terminals, with rules where they appear
     T_BOOL_VALUE <boolValue> (261)
     T_STRING_VALUE <stringValue> (262)
     T_MAIN_IDENTIFIER (263) 1
-    T_CLASS (264) 7
-    T_TYPE <stringValue> (265) 2
-    T_IDENTIFIER <stringValue> (266) 2 3 7
+    T_CLASS (264) 9
+    T_TYPE <stringValue> (265) 1 2
+    T_IDENTIFIER <stringValue> (266) 3 4 9 11 14 15
     UMINUS (267)
 
 
@@ -92,25 +98,37 @@ Nonterminals, with rules where they appear
     N_START (24)
         on left: 1
         on right: 0
-    N_DECLARATION <scopeValue> (25)
-        on left: 2 3 4 5
-        on right: 1 2 3 4 7
-    N_CLASS_DECLARATION <scopeValue> (26)
-        on left: 7
-        on right: 4
-    $@1 (27)
-        on left: 6
-        on right: 7
-    M_CLASS_BLOCK_BEGIN <stringValue> (28)
+    N_MIXED_TYPE <stringValue> (25)
+        on left: 2 3
+        on right: 4 11 14 15
+    N_DECLARATION <pScope> (26)
+        on left: 4 5 6 7
+        on right: 1 4 5 6 9
+    N_CLASS_DECLARATION <pScope> (27)
+        on left: 9
+        on right: 5
+    $@1 (28)
         on left: 8
-        on right: 7
+        on right: 9
+    M_CLASS_BLOCK_BEGIN <stringValue> (29)
+        on left: 10
+        on right: 9
+    N_FUNCTION_DECLARATION <pScope> (30)
+        on left: 11
+        on right: 6
+    N_PARAMETER <pStringList> (31)
+        on left: 12 13
+        on right: 11
+    N_PARAMETER_LIST <pStringList> (32)
+        on left: 14 15
+        on right: 12 14
 
 
 State 0
 
     0 $accept: • N_START $end
 
-    $default  reduce using rule 5 (N_DECLARATION)
+    $default  reduce using rule 7 (N_DECLARATION)
 
     N_START        go to state 1
     N_DECLARATION  go to state 2
@@ -125,17 +143,18 @@ State 1
 
 State 2
 
-    1 N_START: N_DECLARATION • T_MAIN_IDENTIFIER '(' ')' '{' '}'
-    2 N_DECLARATION: N_DECLARATION • T_TYPE T_IDENTIFIER ';'
-    3              | N_DECLARATION • T_IDENTIFIER T_IDENTIFIER ';'
-    4              | N_DECLARATION • N_CLASS_DECLARATION
+    1 N_START: N_DECLARATION • T_TYPE T_MAIN_IDENTIFIER '(' ')' '{' '}'
+    4 N_DECLARATION: N_DECLARATION • N_MIXED_TYPE T_IDENTIFIER ';'
+    5              | N_DECLARATION • N_CLASS_DECLARATION
+    6              | N_DECLARATION • N_FUNCTION_DECLARATION
 
-    T_MAIN_IDENTIFIER  shift, and go to state 4
-    T_CLASS            shift, and go to state 5
-    T_TYPE             shift, and go to state 6
-    T_IDENTIFIER       shift, and go to state 7
+    T_CLASS       shift, and go to state 4
+    T_TYPE        shift, and go to state 5
+    T_IDENTIFIER  shift, and go to state 6
 
-    N_CLASS_DECLARATION  go to state 8
+    N_MIXED_TYPE            go to state 7
+    N_CLASS_DECLARATION     go to state 8
+    N_FUNCTION_DECLARATION  go to state 9
 
 
 State 3
@@ -147,153 +166,251 @@ State 3
 
 State 4
 
-    1 N_START: N_DECLARATION T_MAIN_IDENTIFIER • '(' ')' '{' '}'
-
-    '('  shift, and go to state 9
-
-
-State 5
-
-    7 N_CLASS_DECLARATION: T_CLASS • T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';'
+    9 N_CLASS_DECLARATION: T_CLASS • T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';'
 
     T_IDENTIFIER  shift, and go to state 10
 
 
+State 5
+
+    1 N_START: N_DECLARATION T_TYPE • T_MAIN_IDENTIFIER '(' ')' '{' '}'
+    2 N_MIXED_TYPE: T_TYPE •
+
+    T_MAIN_IDENTIFIER  shift, and go to state 11
+
+    $default  reduce using rule 2 (N_MIXED_TYPE)
+
+
 State 6
 
-    2 N_DECLARATION: N_DECLARATION T_TYPE • T_IDENTIFIER ';'
+    3 N_MIXED_TYPE: T_IDENTIFIER •
 
-    T_IDENTIFIER  shift, and go to state 11
+    $default  reduce using rule 3 (N_MIXED_TYPE)
 
 
 State 7
 
-    3 N_DECLARATION: N_DECLARATION T_IDENTIFIER • T_IDENTIFIER ';'
+    4 N_DECLARATION: N_DECLARATION N_MIXED_TYPE • T_IDENTIFIER ';'
+   11 N_FUNCTION_DECLARATION: N_MIXED_TYPE • T_IDENTIFIER '(' N_PARAMETER ')' ';'
 
     T_IDENTIFIER  shift, and go to state 12
 
 
 State 8
 
-    4 N_DECLARATION: N_DECLARATION N_CLASS_DECLARATION •
+    5 N_DECLARATION: N_DECLARATION N_CLASS_DECLARATION •
 
-    $default  reduce using rule 4 (N_DECLARATION)
+    $default  reduce using rule 5 (N_DECLARATION)
 
 
 State 9
 
-    1 N_START: N_DECLARATION T_MAIN_IDENTIFIER '(' • ')' '{' '}'
+    6 N_DECLARATION: N_DECLARATION N_FUNCTION_DECLARATION •
 
-    ')'  shift, and go to state 13
+    $default  reduce using rule 6 (N_DECLARATION)
 
 
 State 10
 
-    7 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER • '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';'
+    9 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER • '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';'
 
-    '{'  shift, and go to state 14
+    '{'  shift, and go to state 13
 
 
 State 11
 
-    2 N_DECLARATION: N_DECLARATION T_TYPE T_IDENTIFIER • ';'
+    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER • '(' ')' '{' '}'
 
-    ';'  shift, and go to state 15
+    '('  shift, and go to state 14
 
 
 State 12
 
-    3 N_DECLARATION: N_DECLARATION T_IDENTIFIER T_IDENTIFIER • ';'
+    4 N_DECLARATION: N_DECLARATION N_MIXED_TYPE T_IDENTIFIER • ';'
+   11 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER • '(' N_PARAMETER ')' ';'
 
+    '('  shift, and go to state 15
     ';'  shift, and go to state 16
 
 
 State 13
 
-    1 N_START: N_DECLARATION T_MAIN_IDENTIFIER '(' ')' • '{' '}'
+    9 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' • M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';'
 
-    '{'  shift, and go to state 17
+    $default  reduce using rule 10 (M_CLASS_BLOCK_BEGIN)
+
+    M_CLASS_BLOCK_BEGIN  go to state 17
 
 
 State 14
 
-    7 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' • M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';'
+    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' • ')' '{' '}'
 
-    $default  reduce using rule 8 (M_CLASS_BLOCK_BEGIN)
-
-    M_CLASS_BLOCK_BEGIN  go to state 18
+    ')'  shift, and go to state 18
 
 
 State 15
 
-    2 N_DECLARATION: N_DECLARATION T_TYPE T_IDENTIFIER ';' •
+   11 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' • N_PARAMETER ')' ';'
 
-    $default  reduce using rule 2 (N_DECLARATION)
+    T_TYPE        shift, and go to state 19
+    T_IDENTIFIER  shift, and go to state 6
+
+    $default  reduce using rule 13 (N_PARAMETER)
+
+    N_MIXED_TYPE      go to state 20
+    N_PARAMETER       go to state 21
+    N_PARAMETER_LIST  go to state 22
 
 
 State 16
 
-    3 N_DECLARATION: N_DECLARATION T_IDENTIFIER T_IDENTIFIER ';' •
+    4 N_DECLARATION: N_DECLARATION N_MIXED_TYPE T_IDENTIFIER ';' •
 
-    $default  reduce using rule 3 (N_DECLARATION)
+    $default  reduce using rule 4 (N_DECLARATION)
 
 
 State 17
 
-    1 N_START: N_DECLARATION T_MAIN_IDENTIFIER '(' ')' '{' • '}'
+    9 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN • N_DECLARATION '}' $@1 ';'
 
-    '}'  shift, and go to state 19
+    $default  reduce using rule 7 (N_DECLARATION)
+
+    N_DECLARATION  go to state 23
 
 
 State 18
 
-    7 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN • N_DECLARATION '}' $@1 ';'
+    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' ')' • '{' '}'
 
-    $default  reduce using rule 5 (N_DECLARATION)
-
-    N_DECLARATION  go to state 20
+    '{'  shift, and go to state 24
 
 
 State 19
 
-    1 N_START: N_DECLARATION T_MAIN_IDENTIFIER '(' ')' '{' '}' •
+    2 N_MIXED_TYPE: T_TYPE •
 
-    $default  reduce using rule 1 (N_START)
+    $default  reduce using rule 2 (N_MIXED_TYPE)
 
 
 State 20
 
-    2 N_DECLARATION: N_DECLARATION • T_TYPE T_IDENTIFIER ';'
-    3              | N_DECLARATION • T_IDENTIFIER T_IDENTIFIER ';'
-    4              | N_DECLARATION • N_CLASS_DECLARATION
-    7 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION • '}' $@1 ';'
+   15 N_PARAMETER_LIST: N_MIXED_TYPE • T_IDENTIFIER
 
-    T_CLASS       shift, and go to state 5
-    T_TYPE        shift, and go to state 6
-    T_IDENTIFIER  shift, and go to state 7
-    '}'           shift, and go to state 21
-
-    N_CLASS_DECLARATION  go to state 8
+    T_IDENTIFIER  shift, and go to state 25
 
 
 State 21
 
-    7 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' • $@1 ';'
+   11 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER • ')' ';'
 
-    $default  reduce using rule 6 ($@1)
-
-    $@1  go to state 22
+    ')'  shift, and go to state 26
 
 
 State 22
 
-    7 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 • ';'
+   12 N_PARAMETER: N_PARAMETER_LIST •
+   14 N_PARAMETER_LIST: N_PARAMETER_LIST • ',' N_MIXED_TYPE T_IDENTIFIER
 
-    ';'  shift, and go to state 23
+    ','  shift, and go to state 27
+
+    $default  reduce using rule 12 (N_PARAMETER)
 
 
 State 23
 
-    7 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';' •
+    4 N_DECLARATION: N_DECLARATION • N_MIXED_TYPE T_IDENTIFIER ';'
+    5              | N_DECLARATION • N_CLASS_DECLARATION
+    6              | N_DECLARATION • N_FUNCTION_DECLARATION
+    9 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION • '}' $@1 ';'
 
-    $default  reduce using rule 7 (N_CLASS_DECLARATION)
+    T_CLASS       shift, and go to state 4
+    T_TYPE        shift, and go to state 19
+    T_IDENTIFIER  shift, and go to state 6
+    '}'           shift, and go to state 28
+
+    N_MIXED_TYPE            go to state 7
+    N_CLASS_DECLARATION     go to state 8
+    N_FUNCTION_DECLARATION  go to state 9
+
+
+State 24
+
+    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' ')' '{' • '}'
+
+    '}'  shift, and go to state 29
+
+
+State 25
+
+   15 N_PARAMETER_LIST: N_MIXED_TYPE T_IDENTIFIER •
+
+    $default  reduce using rule 15 (N_PARAMETER_LIST)
+
+
+State 26
+
+   11 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER ')' • ';'
+
+    ';'  shift, and go to state 30
+
+
+State 27
+
+   14 N_PARAMETER_LIST: N_PARAMETER_LIST ',' • N_MIXED_TYPE T_IDENTIFIER
+
+    T_TYPE        shift, and go to state 19
+    T_IDENTIFIER  shift, and go to state 6
+
+    N_MIXED_TYPE  go to state 31
+
+
+State 28
+
+    9 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' • $@1 ';'
+
+    $default  reduce using rule 8 ($@1)
+
+    $@1  go to state 32
+
+
+State 29
+
+    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' ')' '{' '}' •
+
+    $default  reduce using rule 1 (N_START)
+
+
+State 30
+
+   11 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER ')' ';' •
+
+    $default  reduce using rule 11 (N_FUNCTION_DECLARATION)
+
+
+State 31
+
+   14 N_PARAMETER_LIST: N_PARAMETER_LIST ',' N_MIXED_TYPE • T_IDENTIFIER
+
+    T_IDENTIFIER  shift, and go to state 33
+
+
+State 32
+
+    9 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 • ';'
+
+    ';'  shift, and go to state 34
+
+
+State 33
+
+   14 N_PARAMETER_LIST: N_PARAMETER_LIST ',' N_MIXED_TYPE T_IDENTIFIER •
+
+    $default  reduce using rule 14 (N_PARAMETER_LIST)
+
+
+State 34
+
+    9 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_CLASS_BLOCK_BEGIN N_DECLARATION '}' $@1 ';' •
+
+    $default  reduce using rule 9 (N_CLASS_DECLARATION)

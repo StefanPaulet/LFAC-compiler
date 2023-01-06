@@ -10,7 +10,8 @@
 class Scope {
 
 public:
-    using TypeLength = TypeTable :: TypeLength;
+    using TypeLength    = TypeTable :: TypeLength;
+    using ParameterList = FunctionEntry :: ParameterList;
 
 private:
     Scope        * _pUpperScope       { nullptr };
@@ -37,10 +38,26 @@ public:
     auto constexpr getTypeTable () -> TypeTable *;
 
 
+private:
+    auto _typeExistenceCheck (
+        char const * pTypeName
+    ) -> TypeEntry *;
+
+
+public:
+
     auto addVariable (
         char const * pSymbolType,
         char const * pSymbolName
-    ) -> bool;
+    ) -> void;
+
+
+    auto addFunction (
+        char const                   * pFunctionName,
+        char const                   * pReturnTypeName,
+        TreeNodeIdentifier           * pFunctionBody,
+        std :: list < char const * > * pParameterListTypes
+    ) -> void;
 
 
     auto addUserDefinedType (

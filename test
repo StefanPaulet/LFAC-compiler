@@ -1,5 +1,6 @@
 int a;
 float b;
+gigel a;
 class A {
 
 };
@@ -9,10 +10,18 @@ class B {
 };
 B c;
 class VeryComplexClass {
+    maicata s;
     B d;
     float a;
     string e;
 };
+class A {
+    int x;
+};
 VeryComplexClass ceva;
 int ceva;
-main() { }
+int f();
+int f;
+float a();
+float g ( A x, B y );
+int main() { }
