@@ -15,6 +15,13 @@ letter          [a-zA-Z]
 
 Type int|float|char|bool|string
 Class class
+If if
+For for
+While while
+Main main
+
+Band &&
+Bor \|\|
 
 IntNumber    (0|[1-9]{digit}*)
 FloatNumber  {IntNumber}\.{IntNumber}
@@ -25,24 +32,40 @@ Identifier   ({letter}|_)({letter}|{digit}|_)*
 
 %%
 
+{Band} {
+    return ( T_BAND );
+}
+
+{Bor} {
+    return ( T_BOR );
+}
+
 {IntNumber} {
     yylval.intValue = atoi ( yytext );
     return ( T_INT_NUMBER );
 }
 
 {FloatNumber} {
+    yylval.floatValue = atof ( yytext );
     return ( T_FLOAT_NUMBER );
 }
 
 {CharValue} { 
+    yylval.charValue = yytext[1];
     return ( T_CHAR_VALUE );
 }
 
 {BoolValue} {
+    if ( ! strcmp ( yytext, "true" ) ) {
+        yylval.boolValue = 1;
+    } else {
+        yylval.boolValue = 0;
+    }
     return ( T_BOOL_VALUE );
 }
 
 {StringValue} {
+    yylval.stringValue = strdup ( yytext );
     return ( T_STRING_VALUE );
 }
 
@@ -50,13 +73,25 @@ Identifier   ({letter}|_)({letter}|{digit}|_)*
     return ( T_CLASS );
 }
 
+{Main} {
+    return ( T_MAIN_IDENTIFIER );
+}
+
+{If} {
+    return ( T_IF );
+}
+
+{While} {
+    return ( T_WHILE );
+}
+
+{For} {
+    return ( T_FOR );
+}
+
 {Type} {
     yylval.stringValue = strdup ( yytext );
     return ( T_TYPE );
-}
-
-"main" {
-    return ( T_MAIN_IDENTIFIER );
 }
 
 {Identifier} {

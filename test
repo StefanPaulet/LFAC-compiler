@@ -1,7 +1,6 @@
 int a;
 float b;
-gigel a;
-int g()
+int g();
 class A {
     int a;
 };
@@ -9,6 +8,18 @@ class B {
     int a;
     int b;
     int g ( int a, float d );
-}
+};
 B c;
-int main() { }
+int x[5][2][4];
+int main() { 
+    if ( 2 ) {
+        x = 5;
+    }
+    x[2];
+    x;
+    x()[2]();
+    f()()()()[5]()[3][4][2]();
+    x(x[2]);
+    f[5].x[5].x()[2].f();
+    f()[5].t[20]();
+}

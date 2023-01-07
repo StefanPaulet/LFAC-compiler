@@ -51,14 +51,29 @@
 
 %token T_MAIN_IDENTIFIER
 %token T_CLASS
+%token T_IF
+%token T_WHILE
+%token T_FOR
 
 %token <stringValue> T_TYPE
 %token <stringValue> T_IDENTIFIER
 
 %nterm <stringValue> N_MIXED_TYPE
 
-%nterm <intValue> N_EXPRESSION
 %nterm <intValue> N_CONSTANT_VALUE
+
+%nterm <stringValue> N_SYMBOL_ACCESS
+%nterm <stringValue> N_NON_ARRAY_SYMBOL_ACCESS
+%nterm <stringValue> N_ARRAY_SYMBOL_ACCESS
+
+%nterm <stringValue> N_MEMBER_ACCESS
+
+%nterm <pStringList> N_PARAMETER
+%nterm <pStringList> N_PARAMETER_LIST
+
+%nterm <intValue> N_EXPRESSION
+
+%nterm <boolValue> N_BOOL_EXPRESSION
 
 %nterm <pScope> N_DECLARATION
 
@@ -67,15 +82,29 @@
 %nterm <pArraytypePair> N_ARRAY_SUBSCRIPT
 
 %nterm <pScope> N_CLASS_DECLARATION
-%nterm <stringValue> M_CLASS_BLOCK_BEGIN
+%nterm <stringValue> M_BLOCK_BEGIN
 
 %nterm <pScope> N_FUNCTION_DECLARATION
-%nterm <pStringList> N_PARAMETER
-%nterm <pStringList> N_PARAMETER_LIST
+%nterm <pStringList> N_PARAMETER_DECLARATION
+%nterm <pStringList> N_PARAMETER_DECLARATION_LIST
+
+%nterm <pScope> N_BLOCK
+%nterm <stringValue> N_STATEMENT
+
+%nterm <stringValue> N_ASSIGNMENT
+%nterm <stringValue> N_IF_STATEMENT
+%nterm <stringValue> N_WHILE_STATEMENT
+%nterm <stringValue> N_FOR_STATEMENT
+
+%left T_BAND
+%left T_BOR
+%right UNOT
+
 
 %left '-' '+'
 %left '*' '/' 
 %right UMINUS
+
 
 %start N_START
 
@@ -83,23 +112,48 @@
 
 N_START:
     N_DECLARATION
-    T_TYPE T_MAIN_IDENTIFIER '(' ')' '{' '}' { 
-        std :: cout << "Vars:\n";
+    T_TYPE T_MAIN_IDENTIFIER '(' ')' N_BLOCK {
         for ( auto e : * pGlobalScope->getSymbolTable()->getSymbols() ) {
-            std :: cout << e->getTypeName() << ' ' << e->getName() << '\n'; 
+            std :: cout << e->getTypeName() << ' ' << e->getName() << '\n';
         }
-        std :: cout << "\nType:\n";
-        for ( auto e : * pGlobalScope->getTypeTable()->getTypes() ) {
-            std :: cout << e->getName() << ' ' << e->getLength() << ' ' << '\n'; 
-        }  
     }
 
-N_CONSTANT_VALUE :
+N_CONSTANT_VALUE:
     T_INT_NUMBER |
-    T_FLOAT_NUMBER |
-    T_CHAR_VALUE |
-    T_BOOL_VALUE |
-    T_STRING_VALUE
+    T_FLOAT_NUMBER { }|
+    T_CHAR_VALUE { }|
+    T_BOOL_VALUE { }|
+    T_STRING_VALUE { }
+
+N_SYMBOL_ACCESS:
+    N_NON_ARRAY_SYMBOL_ACCESS |
+    N_ARRAY_SYMBOL_ACCESS
+
+N_NON_ARRAY_SYMBOL_ACCESS:
+    N_SYMBOL_ACCESS '(' N_PARAMETER ')' |
+    T_IDENTIFIER
+
+N_ARRAY_SYMBOL_ACCESS:
+    N_NON_ARRAY_SYMBOL_ACCESS N_ARRAY_SUBSCRIPT
+
+N_MEMBER_ACCESS:
+    N_MEMBER_ACCESS '.' N_SYMBOL_ACCESS |
+    N_SYMBOL_ACCESS
+
+N_PARAMETER:
+    N_PARAMETER_LIST |
+    { $$ = new std :: list < char const * >; };
+
+N_PARAMETER_LIST:
+    N_PARAMETER_LIST ',' N_SYMBOL_ACCESS {
+        $1->push_back ( $3 );
+        $$ = $1;
+    } |
+    N_SYMBOL_ACCESS {
+        $$ = new std :: list < char const * >;
+        $$->push_back( $1 );
+    }
+
     
 N_MIXED_TYPE:
     T_TYPE |
@@ -113,8 +167,15 @@ N_EXPRESSION:
     '(' N_EXPRESSION ')' {} |
     '-' N_EXPRESSION %prec UMINUS {} |
     N_CONSTANT_VALUE |
-    T_IDENTIFIER |
-    T_IDENTIFIER '(' N_PARAMETER ')' { }
+    N_MEMBER_ACCESS { }
+
+
+N_BOOL_EXPRESSION:
+    N_BOOL_EXPRESSION T_BAND N_BOOL_EXPRESSION |
+    N_BOOL_EXPRESSION T_BOR N_BOOL_EXPRESSION |
+    '!' N_BOOL_EXPRESSION %prec UNOT { }| 
+    N_CONSTANT_VALUE { } |
+    N_MEMBER_ACCESS { }
     
 
 N_DECLARATION:
@@ -122,33 +183,36 @@ N_DECLARATION:
     N_DECLARATION N_CLASS_DECLARATION ';' |
     N_DECLARATION N_FUNCTION_DECLARATION ';' |
     N_DECLARATION error ';' |
-    ;
+    { };
 
 N_VARIABLE_DECLARATION:
-    N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT {
-        if ( strlen ( $3->first ) != 0 ) {
-            pCurrentScope->addArrayVariable ( $1, $2, $3->first, $3->second );
-        }
+    N_MIXED_TYPE T_IDENTIFIER {
         pCurrentScope->addVariable ( $1, $2 );
+    } |
+    N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT {
+        pCurrentScope->addArrayVariable ( $1, $2, $3->first, $3->second );
     } 
 
 N_ARRAY_SUBSCRIPT:
-    N_ARRAY_SUBSCRIPT '[' T_INT_NUMBER ']' {
-        strcat ( $1->first, "A" );
-        strcat ( $1->first, std :: to_string ( $3 ).c_str() );
-        strcat ( $1->first, "_" );
-        $$ = $1;
-        $$->second *= $3;
-    }
-    | { 
+    '[' T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT {
+        char * pAux = new char;
+        sprintf ( pAux, "A%d_", $2 );
+        strcat ( pAux, $4->first );
+        $$ = new std :: pair < char *, Scope :: TypeLength >;
+        $$->first = pAux;
+        $$->second = $4->second * $2;
+        delete $4;
+    } |
+    '[' T_INT_NUMBER ']' { 
         $$ = new std :: pair < char *, Scope :: TypeLength >;
         $$->first = new char;
-        $$->second = 1;
+        sprintf ( $$->first, "A%d_", $2 );
+        $$->second = $2;
     };
 
 N_CLASS_DECLARATION:
     T_CLASS T_IDENTIFIER '{' 
-    M_CLASS_BLOCK_BEGIN
+    M_BLOCK_BEGIN
     N_DECLARATION
     '}' {
         auto classScope = pCurrentScope;
@@ -159,22 +223,22 @@ N_CLASS_DECLARATION:
         }
     } 
 
-M_CLASS_BLOCK_BEGIN: { 
+M_BLOCK_BEGIN: { 
         auto newScope = new Scope ( pCurrentScope, pGlobalScope );
         pCurrentScope = newScope; 
     }
 
 N_FUNCTION_DECLARATION: 
-    N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER ')' {
+    N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' {
         pCurrentScope->addFunction ( $2, $1, nullptr, $4 );
     }
 
-N_PARAMETER:
-    N_PARAMETER_LIST |
+N_PARAMETER_DECLARATION:
+    N_PARAMETER_DECLARATION_LIST |
     { $$ = new std :: list < char const * >; };
 
-N_PARAMETER_LIST:
-    N_PARAMETER_LIST ',' N_MIXED_TYPE T_IDENTIFIER {
+N_PARAMETER_DECLARATION_LIST:
+    N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE T_IDENTIFIER {
         $1->push_back ( $3 );
         $$ = $1;
     } |
@@ -183,6 +247,25 @@ N_PARAMETER_LIST:
         $$->push_back( $1 );
     }
 
+N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}' { }
 
+N_STATEMENT:
+    N_STATEMENT N_ASSIGNMENT ';' |
+    N_STATEMENT N_IF_STATEMENT |
+    N_STATEMENT N_WHILE_STATEMENT |
+    N_STATEMENT N_FOR_STATEMENT |
+    N_STATEMENT N_EXPRESSION ';' |
+    { };
 
+N_ASSIGNMENT:
+    T_IDENTIFIER '=' N_EXPRESSION { } 
+
+N_IF_STATEMENT:
+    T_IF '(' N_BOOL_EXPRESSION ')' N_BLOCK { }
+
+N_WHILE_STATEMENT:
+    T_WHILE '(' N_BOOL_EXPRESSION ')' N_BLOCK { }
+
+N_FOR_STATEMENT:
+    T_FOR '(' ',' ',' ')' N_BLOCK { }
 %%

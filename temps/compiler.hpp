@@ -61,9 +61,15 @@ extern int yydebug;
     T_STRING_VALUE = 262,          /* T_STRING_VALUE  */
     T_MAIN_IDENTIFIER = 263,       /* T_MAIN_IDENTIFIER  */
     T_CLASS = 264,                 /* T_CLASS  */
-    T_TYPE = 265,                  /* T_TYPE  */
-    T_IDENTIFIER = 266,            /* T_IDENTIFIER  */
-    UMINUS = 267                   /* UMINUS  */
+    T_IF = 265,                    /* T_IF  */
+    T_WHILE = 266,                 /* T_WHILE  */
+    T_FOR = 267,                   /* T_FOR  */
+    T_TYPE = 268,                  /* T_TYPE  */
+    T_IDENTIFIER = 269,            /* T_IDENTIFIER  */
+    T_BAND = 270,                  /* T_BAND  */
+    T_BOR = 271,                   /* T_BOR  */
+    UNOT = 272,                    /* UNOT  */
+    UMINUS = 273                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -87,7 +93,7 @@ union YYSTYPE
     std :: pair < char *, Scope :: TypeLength > * pArraytypePair;
 #endif
 
-#line 91 "compiler.hpp"
+#line 97 "compiler.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
