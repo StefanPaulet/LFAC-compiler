@@ -26,6 +26,7 @@ Identifier   ({letter}|_)({letter}|{digit}|_)*
 %%
 
 {IntNumber} {
+    yylval.intValue = atoi ( yytext );
     return ( T_INT_NUMBER );
 }
 

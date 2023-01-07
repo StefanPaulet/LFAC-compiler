@@ -84,9 +84,10 @@ union YYSTYPE
     Scope * pScope;
     FunctionEntry :: ParameterList * pParamList;
     std :: list < char const * > * pStringList;
+    std :: pair < char *, Scope :: TypeLength > * pArraytypePair;
 #endif
 
-#line 90 "compiler.hpp"
+#line 91 "compiler.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

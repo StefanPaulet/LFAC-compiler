@@ -818,47 +818,48 @@ case 1:
 YY_RULE_SETUP
 #line 28 "compiler.l"
 {
+    yylval.intValue = atoi ( yytext );
     return ( T_INT_NUMBER );
 }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 32 "compiler.l"
+#line 33 "compiler.l"
 {
     return ( T_FLOAT_NUMBER );
 }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 36 "compiler.l"
+#line 37 "compiler.l"
 { 
     return ( T_CHAR_VALUE );
 }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 40 "compiler.l"
+#line 41 "compiler.l"
 {
     return ( T_BOOL_VALUE );
 }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 44 "compiler.l"
+#line 45 "compiler.l"
 {
     return ( T_STRING_VALUE );
 }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 48 "compiler.l"
+#line 49 "compiler.l"
 {
     return ( T_CLASS );
 }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 52 "compiler.l"
+#line 53 "compiler.l"
 {
     yylval.stringValue = strdup ( yytext );
     return ( T_TYPE );
@@ -866,14 +867,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 57 "compiler.l"
+#line 58 "compiler.l"
 {
     return ( T_MAIN_IDENTIFIER );
 }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 61 "compiler.l"
+#line 62 "compiler.l"
 {
     yylval.stringValue = strdup ( yytext );
     return ( T_IDENTIFIER );
@@ -881,39 +882,39 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 66 "compiler.l"
+#line 67 "compiler.l"
 { BEGIN ( comment ); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 67 "compiler.l"
+#line 68 "compiler.l"
 { BEGIN ( 0 ); }
 	YY_BREAK
 case 12:
 /* rule 12 can match eol */
 YY_RULE_SETUP
-#line 68 "compiler.l"
+#line 69 "compiler.l"
 ;
 	YY_BREAK
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 70 "compiler.l"
+#line 71 "compiler.l"
 { }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 72 "compiler.l"
+#line 73 "compiler.l"
 {
     return * yytext;
 }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 76 "compiler.l"
+#line 77 "compiler.l"
 ECHO;
 	YY_BREAK
-#line 917 "lex.yy.c"
+#line 918 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(comment):
 	yyterminate();
@@ -1931,5 +1932,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 76 "compiler.l"
+#line 77 "compiler.l"
 

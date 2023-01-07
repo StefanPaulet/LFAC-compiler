@@ -51,6 +51,13 @@ public:
         char const * pSymbolName
     ) -> void;
 
+    
+    auto addArrayVariable (
+        char const * pBaseType,
+        char const * pSymbolName,
+        char const * pArrayType,
+        TypeLength   arraySize
+    ) -> void;
 
     auto addFunction (
         char const                   * pFunctionName,

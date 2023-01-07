@@ -1,27 +1,14 @@
 int a;
 float b;
 gigel a;
+int g()
 class A {
-
+    int a;
 };
 class B {
     int a;
     int b;
-};
+    int g ( int a, float d );
+}
 B c;
-class VeryComplexClass {
-    maicata s;
-    B d;
-    float a;
-    string e;
-};
-class A {
-    int x;
-};
-VeryComplexClass ceva;
-int ceva;
-int f();
-int f;
-float a();
-float g ( A x, B y );
 int main() { }

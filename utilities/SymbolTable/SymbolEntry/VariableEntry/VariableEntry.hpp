@@ -15,10 +15,14 @@ public:
         float   floatValue;
         int     intValue;
         char *  stringValue;
-        bool *  pBoolValue;
-        float * pFloatValue;
-        int *   pIntValue;
         Scope * structValue;
+
+        bool   * boolArrayValue;
+        char   * charArrayValue;
+        float  * floatArrayValue;
+        int    * intArrayValue;
+        char  ** stringArrayValue;
+        Scope ** structArrayValue;
 
         VarValue () = default;
         VarValue ( bool val ) : boolValue ( val ) { }

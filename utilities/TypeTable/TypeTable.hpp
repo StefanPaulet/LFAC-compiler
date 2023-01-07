@@ -2,6 +2,7 @@
 #define __TYPE_TABLE_HPP__
 
 #include "TypeEntry/StructuredTypeEntry/StructuredTypeEntry.hpp"
+#include "TypeEntry/ArrayTypeEntry/ArrayTypeEntry.hpp"
 
 class TypeTable {
 
@@ -37,6 +38,7 @@ public:
     ) -> void;
 };
 
+#include "TypeEntry/ArrayTypeEntry/impl/ArrayTypeEntry.hpp"
 #include "TypeEntry/StructuredTypeEntry/impl/StructuredTypeEntry.hpp"
 
 #endif //__TYPE_TABLE_HPP__

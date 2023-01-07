@@ -38,6 +38,7 @@
     Scope * pScope;
     FunctionEntry :: ParameterList * pParamList;
     std :: list < char const * > * pStringList;
+    std :: pair < char *, Scope :: TypeLength > * pArraytypePair;
 #endif
 }
     
@@ -60,6 +61,10 @@
 %nterm <intValue> N_CONSTANT_VALUE
 
 %nterm <pScope> N_DECLARATION
+
+%nterm <pScope> N_VARIABLE_DECLARATION
+
+%nterm <pArraytypePair> N_ARRAY_SUBSCRIPT
 
 %nterm <pScope> N_CLASS_DECLARATION
 %nterm <stringValue> M_CLASS_BLOCK_BEGIN
@@ -113,12 +118,33 @@ N_EXPRESSION:
     
 
 N_DECLARATION:
-    N_DECLARATION N_MIXED_TYPE T_IDENTIFIER ';' {
-        pCurrentScope->addVariable ( $2, $3 );
-    } |
-    N_DECLARATION N_CLASS_DECLARATION |
-    N_DECLARATION N_FUNCTION_DECLARATION |
+    N_DECLARATION N_VARIABLE_DECLARATION ';'|
+    N_DECLARATION N_CLASS_DECLARATION ';' |
+    N_DECLARATION N_FUNCTION_DECLARATION ';' |
+    N_DECLARATION error ';' |
     ;
+
+N_VARIABLE_DECLARATION:
+    N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT {
+        if ( strlen ( $3->first ) != 0 ) {
+            pCurrentScope->addArrayVariable ( $1, $2, $3->first, $3->second );
+        }
+        pCurrentScope->addVariable ( $1, $2 );
+    } 
+
+N_ARRAY_SUBSCRIPT:
+    N_ARRAY_SUBSCRIPT '[' T_INT_NUMBER ']' {
+        strcat ( $1->first, "A" );
+        strcat ( $1->first, std :: to_string ( $3 ).c_str() );
+        strcat ( $1->first, "_" );
+        $$ = $1;
+        $$->second *= $3;
+    }
+    | { 
+        $$ = new std :: pair < char *, Scope :: TypeLength >;
+        $$->first = new char;
+        $$->second = 1;
+    };
 
 N_CLASS_DECLARATION:
     T_CLASS T_IDENTIFIER '{' 
@@ -132,7 +158,6 @@ N_CLASS_DECLARATION:
             pCurrentScope->setUserDefinedTypeLength ( pNewEntry );
         }
     } 
-    ';'
 
 M_CLASS_BLOCK_BEGIN: { 
         auto newScope = new Scope ( pCurrentScope, pGlobalScope );
@@ -140,7 +165,7 @@ M_CLASS_BLOCK_BEGIN: {
     }
 
 N_FUNCTION_DECLARATION: 
-    N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER ')' ';' {
+    N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER ')' {
         pCurrentScope->addFunction ( $2, $1, nullptr, $4 );
     }
 

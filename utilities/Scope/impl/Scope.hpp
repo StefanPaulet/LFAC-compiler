@@ -71,12 +71,55 @@ auto Scope :: addVariable (
         error :: variableAddingError ( pSymbolName, symbolEntry );
         return;
     }
+
     this->_pSymbols->addSymbol ( 
         new VariableEntry (
                 pSymbolName,
                 pType
             )
         );
+}
+
+
+auto Scope :: addArrayVariable (
+    char const * pBaseType,
+    char const * pSymbolName,
+    char const * pArrayType,
+    TypeLength   arraySize
+) -> void {
+
+    auto symbolEntry = this->_pSymbols->lookUpSymbol ( pSymbolName );
+    if ( symbolEntry != nullptr ) {
+        error :: variableAddingError ( pSymbolName, symbolEntry );
+        return;
+    }
+
+    std :: string arrayComposedType = std :: string ( pArrayType ) + pBaseType;
+    auto pExistentType = this->_typeExistenceCheck ( arrayComposedType.c_str() );
+    if ( pExistentType != nullptr ) {
+        this->_pSymbols->addSymbol (
+            new VariableEntry (
+                pSymbolName,
+                pExistentType
+            )
+        );
+        return;
+    }
+
+    auto pType = this->_typeExistenceCheck ( pBaseType );
+    if ( pType == nullptr ) {
+        error :: undefinedTypeError ( pBaseType );
+        return;
+    }
+
+    ArrayTypeEntry * pNewArrayType = new ArrayTypeEntry ( arrayComposedType.c_str(), arraySize * pType->getLength(), pType );
+    this->_pTypes->addType ( pNewArrayType );
+    this->_pSymbols->addSymbol (
+        new VariableEntry (
+            pSymbolName,
+            pNewArrayType
+        )
+    );
 }
 
 
