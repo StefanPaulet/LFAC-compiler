@@ -69,6 +69,7 @@
 /* First part of user prologue.  */
 #line 1 "compiler.ypp"
 
+    #include <fstream>
     #include <iostream>
     #include "main.hpp"
 
@@ -78,25 +79,21 @@
 
     #include "../utilities/Scope/Scope.hpp"
     #include "../utilities/Scope/impl/Scope.hpp"
-    
-    Scope * pGlobalScope = new Scope ( 
-            nullptr,
-            nullptr,
-            new TypeTable (
-                new TypeTable :: TypeList {
-                    new TypeEntry ( "noTypeFunctionParameter", 0 ),
-                    new TypeEntry ( "char", 1 ),
-                    new TypeEntry ( "bool", 1 ),
-                    new TypeEntry ( "float", 4 ),
-                    new TypeEntry ( "int", 4 ),
-                    new TypeEntry ( "string", 8 )
-                }
-            )
-    );
 
-    Scope * pCurrentScope = pGlobalScope;
+    Scope * pCurrentScope = Scope :: pGlobalScope;
+    Scope * pNonClassScope;
+    std :: ofstream debugOut ( "debug.out" );
 
-#line 100 "compiler.cpp"
+    unsigned long long int errorCount = 0;
+
+    using StringList               = std :: list < char const * >;
+    using ArraytypePair            = TypeEntry :: ArraytypePair;
+    using ParameterDeclarationPair = Scope :: ParameterDeclarationPair;
+    using ParameterDeclarationList = Scope :: ParameterDeclarationList;
+    using IdentifierAccessPair     = std :: pair < char const *, SymbolEntry * >;
+    using IdentifierList           = std :: list < SymbolEntry * >;
+
+#line 97 "compiler.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -137,53 +134,58 @@ enum yysymbol_kind_t
   YYSYMBOL_T_IF = 10,                      /* T_IF  */
   YYSYMBOL_T_WHILE = 11,                   /* T_WHILE  */
   YYSYMBOL_T_FOR = 12,                     /* T_FOR  */
-  YYSYMBOL_T_TYPE = 13,                    /* T_TYPE  */
-  YYSYMBOL_T_IDENTIFIER = 14,              /* T_IDENTIFIER  */
-  YYSYMBOL_T_BAND = 15,                    /* T_BAND  */
-  YYSYMBOL_T_BOR = 16,                     /* T_BOR  */
-  YYSYMBOL_UNOT = 17,                      /* UNOT  */
-  YYSYMBOL_18_ = 18,                       /* '-'  */
-  YYSYMBOL_19_ = 19,                       /* '+'  */
-  YYSYMBOL_20_ = 20,                       /* '*'  */
-  YYSYMBOL_21_ = 21,                       /* '/'  */
-  YYSYMBOL_UMINUS = 22,                    /* UMINUS  */
-  YYSYMBOL_23_ = 23,                       /* '('  */
-  YYSYMBOL_24_ = 24,                       /* ')'  */
-  YYSYMBOL_25_ = 25,                       /* '.'  */
-  YYSYMBOL_26_ = 26,                       /* ','  */
-  YYSYMBOL_27_ = 27,                       /* '!'  */
-  YYSYMBOL_28_ = 28,                       /* ';'  */
-  YYSYMBOL_29_ = 29,                       /* '['  */
-  YYSYMBOL_30_ = 30,                       /* ']'  */
-  YYSYMBOL_31_ = 31,                       /* '{'  */
-  YYSYMBOL_32_ = 32,                       /* '}'  */
-  YYSYMBOL_33_ = 33,                       /* '='  */
-  YYSYMBOL_YYACCEPT = 34,                  /* $accept  */
-  YYSYMBOL_N_START = 35,                   /* N_START  */
-  YYSYMBOL_N_CONSTANT_VALUE = 36,          /* N_CONSTANT_VALUE  */
-  YYSYMBOL_N_SYMBOL_ACCESS = 37,           /* N_SYMBOL_ACCESS  */
-  YYSYMBOL_N_NON_ARRAY_SYMBOL_ACCESS = 38, /* N_NON_ARRAY_SYMBOL_ACCESS  */
-  YYSYMBOL_N_ARRAY_SYMBOL_ACCESS = 39,     /* N_ARRAY_SYMBOL_ACCESS  */
-  YYSYMBOL_N_MEMBER_ACCESS = 40,           /* N_MEMBER_ACCESS  */
-  YYSYMBOL_N_PARAMETER = 41,               /* N_PARAMETER  */
-  YYSYMBOL_N_PARAMETER_LIST = 42,          /* N_PARAMETER_LIST  */
-  YYSYMBOL_N_MIXED_TYPE = 43,              /* N_MIXED_TYPE  */
-  YYSYMBOL_N_EXPRESSION = 44,              /* N_EXPRESSION  */
-  YYSYMBOL_N_BOOL_EXPRESSION = 45,         /* N_BOOL_EXPRESSION  */
-  YYSYMBOL_N_DECLARATION = 46,             /* N_DECLARATION  */
-  YYSYMBOL_N_VARIABLE_DECLARATION = 47,    /* N_VARIABLE_DECLARATION  */
-  YYSYMBOL_N_ARRAY_SUBSCRIPT = 48,         /* N_ARRAY_SUBSCRIPT  */
-  YYSYMBOL_N_CLASS_DECLARATION = 49,       /* N_CLASS_DECLARATION  */
-  YYSYMBOL_M_BLOCK_BEGIN = 50,             /* M_BLOCK_BEGIN  */
-  YYSYMBOL_N_FUNCTION_DECLARATION = 51,    /* N_FUNCTION_DECLARATION  */
-  YYSYMBOL_N_PARAMETER_DECLARATION = 52,   /* N_PARAMETER_DECLARATION  */
-  YYSYMBOL_N_PARAMETER_DECLARATION_LIST = 53, /* N_PARAMETER_DECLARATION_LIST  */
-  YYSYMBOL_N_BLOCK = 54,                   /* N_BLOCK  */
-  YYSYMBOL_N_STATEMENT = 55,               /* N_STATEMENT  */
-  YYSYMBOL_N_ASSIGNMENT = 56,              /* N_ASSIGNMENT  */
-  YYSYMBOL_N_IF_STATEMENT = 57,            /* N_IF_STATEMENT  */
-  YYSYMBOL_N_WHILE_STATEMENT = 58,         /* N_WHILE_STATEMENT  */
-  YYSYMBOL_N_FOR_STATEMENT = 59            /* N_FOR_STATEMENT  */
+  YYSYMBOL_T_CONST = 13,                   /* T_CONST  */
+  YYSYMBOL_T_TYPE = 14,                    /* T_TYPE  */
+  YYSYMBOL_T_IDENTIFIER = 15,              /* T_IDENTIFIER  */
+  YYSYMBOL_T_BAND = 16,                    /* T_BAND  */
+  YYSYMBOL_T_BOR = 17,                     /* T_BOR  */
+  YYSYMBOL_UNOT = 18,                      /* UNOT  */
+  YYSYMBOL_19_ = 19,                       /* '-'  */
+  YYSYMBOL_20_ = 20,                       /* '+'  */
+  YYSYMBOL_21_ = 21,                       /* '*'  */
+  YYSYMBOL_22_ = 22,                       /* '/'  */
+  YYSYMBOL_UMINUS = 23,                    /* UMINUS  */
+  YYSYMBOL_24_ = 24,                       /* '('  */
+  YYSYMBOL_25_ = 25,                       /* ')'  */
+  YYSYMBOL_26_ = 26,                       /* '.'  */
+  YYSYMBOL_27_ = 27,                       /* ','  */
+  YYSYMBOL_28_ = 28,                       /* '!'  */
+  YYSYMBOL_29_ = 29,                       /* ';'  */
+  YYSYMBOL_30_ = 30,                       /* '['  */
+  YYSYMBOL_31_ = 31,                       /* ']'  */
+  YYSYMBOL_32_ = 32,                       /* '{'  */
+  YYSYMBOL_33_ = 33,                       /* '}'  */
+  YYSYMBOL_34_ = 34,                       /* '='  */
+  YYSYMBOL_YYACCEPT = 35,                  /* $accept  */
+  YYSYMBOL_N_START = 36,                   /* N_START  */
+  YYSYMBOL_N_CONSTANT_VALUE = 37,          /* N_CONSTANT_VALUE  */
+  YYSYMBOL_N_SYMBOL_ACCESS = 38,           /* N_SYMBOL_ACCESS  */
+  YYSYMBOL_N_NON_ARRAY_SYMBOL_ACCESS = 39, /* N_NON_ARRAY_SYMBOL_ACCESS  */
+  YYSYMBOL_M_PARAMETER_LOOKUP_SCOPE_CHANGE = 40, /* M_PARAMETER_LOOKUP_SCOPE_CHANGE  */
+  YYSYMBOL_N_ARRAY_SYMBOL_ACCESS = 41,     /* N_ARRAY_SYMBOL_ACCESS  */
+  YYSYMBOL_N_VARIABLE_ACCESS = 42,         /* N_VARIABLE_ACCESS  */
+  YYSYMBOL_43_1 = 43,                      /* $@1  */
+  YYSYMBOL_M_CLASS_ACCESS_SCOPE_CHANGE = 44, /* M_CLASS_ACCESS_SCOPE_CHANGE  */
+  YYSYMBOL_N_PARAMETER = 45,               /* N_PARAMETER  */
+  YYSYMBOL_N_PARAMETER_LIST = 46,          /* N_PARAMETER_LIST  */
+  YYSYMBOL_N_MIXED_TYPE = 47,              /* N_MIXED_TYPE  */
+  YYSYMBOL_N_EXPRESSION = 48,              /* N_EXPRESSION  */
+  YYSYMBOL_N_BOOL_EXPRESSION = 49,         /* N_BOOL_EXPRESSION  */
+  YYSYMBOL_N_DECLARATION = 50,             /* N_DECLARATION  */
+  YYSYMBOL_N_BLOCK_SCOPE_DECLARATION = 51, /* N_BLOCK_SCOPE_DECLARATION  */
+  YYSYMBOL_N_VARIABLE_DECLARATION = 52,    /* N_VARIABLE_DECLARATION  */
+  YYSYMBOL_N_ARRAY_SUBSCRIPT = 53,         /* N_ARRAY_SUBSCRIPT  */
+  YYSYMBOL_N_CLASS_DECLARATION = 54,       /* N_CLASS_DECLARATION  */
+  YYSYMBOL_M_BLOCK_BEGIN = 55,             /* M_BLOCK_BEGIN  */
+  YYSYMBOL_N_FUNCTION_DECLARATION = 56,    /* N_FUNCTION_DECLARATION  */
+  YYSYMBOL_N_PARAMETER_DECLARATION = 57,   /* N_PARAMETER_DECLARATION  */
+  YYSYMBOL_N_PARAMETER_DECLARATION_LIST = 58, /* N_PARAMETER_DECLARATION_LIST  */
+  YYSYMBOL_N_BLOCK = 59,                   /* N_BLOCK  */
+  YYSYMBOL_N_STATEMENT = 60,               /* N_STATEMENT  */
+  YYSYMBOL_N_ASSIGNMENT = 61,              /* N_ASSIGNMENT  */
+  YYSYMBOL_N_IF_STATEMENT = 62,            /* N_IF_STATEMENT  */
+  YYSYMBOL_N_WHILE_STATEMENT = 63,         /* N_WHILE_STATEMENT  */
+  YYSYMBOL_N_FOR_STATEMENT = 64            /* N_FOR_STATEMENT  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -511,19 +513,19 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  3
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   129
+#define YYLAST   161
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  34
+#define YYNTOKENS  35
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  26
+#define YYNNTS  30
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  60
+#define YYNRULES  69
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  113
+#define YYNSTATES  127
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   273
+#define YYMAXUTOK   274
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -540,16 +542,16 @@ static const yytype_int8 yytranslate[] =
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    27,     2,     2,     2,     2,     2,     2,
-      23,    24,    20,    19,    26,    18,    25,    21,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    28,
-       2,    33,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,    28,     2,     2,     2,     2,     2,     2,
+      24,    25,    21,    20,    27,    19,    26,    22,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,    29,
+       2,    34,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,    29,     2,    30,     2,     2,     2,     2,     2,     2,
+       2,    30,     2,    31,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    31,     2,    32,     2,     2,     2,     2,
+       2,     2,     2,    32,     2,    33,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -564,20 +566,20 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
-      15,    16,    17,    22
+      15,    16,    17,    18,    23
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   114,   114,   122,   123,   124,   125,   126,   129,   130,
-     133,   134,   137,   140,   141,   144,   145,   148,   152,   159,
-     160,   163,   164,   165,   166,   167,   168,   169,   170,   174,
-     175,   176,   177,   178,   182,   183,   184,   185,   186,   189,
-     192,   197,   206,   214,   226,   232,   237,   238,   241,   245,
-     250,   253,   254,   255,   256,   257,   258,   261,   264,   267,
-     270
+       0,   117,   117,   133,   134,   135,   136,   137,   140,   141,
+     144,   155,   169,   172,   187,   187,   208,   216,   219,   222,
+     225,   229,   236,   237,   240,   241,   242,   243,   244,   245,
+     246,   247,   251,   252,   253,   254,   255,   259,   260,   261,
+     262,   266,   267,   271,   274,   278,   281,   288,   297,   306,
+     319,   326,   331,   332,   336,   340,   346,   362,   363,   364,
+     365,   366,   367,   368,   369,   370,   374,   378,   382,   386
 };
 #endif
 
@@ -595,15 +597,17 @@ static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "T_INT_NUMBER",
   "T_CHAR_VALUE", "T_FLOAT_NUMBER", "T_BOOL_VALUE", "T_STRING_VALUE",
-  "T_MAIN_IDENTIFIER", "T_CLASS", "T_IF", "T_WHILE", "T_FOR", "T_TYPE",
-  "T_IDENTIFIER", "T_BAND", "T_BOR", "UNOT", "'-'", "'+'", "'*'", "'/'",
-  "UMINUS", "'('", "')'", "'.'", "','", "'!'", "';'", "'['", "']'", "'{'",
-  "'}'", "'='", "$accept", "N_START", "N_CONSTANT_VALUE",
-  "N_SYMBOL_ACCESS", "N_NON_ARRAY_SYMBOL_ACCESS", "N_ARRAY_SYMBOL_ACCESS",
-  "N_MEMBER_ACCESS", "N_PARAMETER", "N_PARAMETER_LIST", "N_MIXED_TYPE",
-  "N_EXPRESSION", "N_BOOL_EXPRESSION", "N_DECLARATION",
-  "N_VARIABLE_DECLARATION", "N_ARRAY_SUBSCRIPT", "N_CLASS_DECLARATION",
-  "M_BLOCK_BEGIN", "N_FUNCTION_DECLARATION", "N_PARAMETER_DECLARATION",
+  "T_MAIN_IDENTIFIER", "T_CLASS", "T_IF", "T_WHILE", "T_FOR", "T_CONST",
+  "T_TYPE", "T_IDENTIFIER", "T_BAND", "T_BOR", "UNOT", "'-'", "'+'", "'*'",
+  "'/'", "UMINUS", "'('", "')'", "'.'", "','", "'!'", "';'", "'['", "']'",
+  "'{'", "'}'", "'='", "$accept", "N_START", "N_CONSTANT_VALUE",
+  "N_SYMBOL_ACCESS", "N_NON_ARRAY_SYMBOL_ACCESS",
+  "M_PARAMETER_LOOKUP_SCOPE_CHANGE", "N_ARRAY_SYMBOL_ACCESS",
+  "N_VARIABLE_ACCESS", "$@1", "M_CLASS_ACCESS_SCOPE_CHANGE", "N_PARAMETER",
+  "N_PARAMETER_LIST", "N_MIXED_TYPE", "N_EXPRESSION", "N_BOOL_EXPRESSION",
+  "N_DECLARATION", "N_BLOCK_SCOPE_DECLARATION", "N_VARIABLE_DECLARATION",
+  "N_ARRAY_SUBSCRIPT", "N_CLASS_DECLARATION", "M_BLOCK_BEGIN",
+  "N_FUNCTION_DECLARATION", "N_PARAMETER_DECLARATION",
   "N_PARAMETER_DECLARATION_LIST", "N_BLOCK", "N_STATEMENT", "N_ASSIGNMENT",
   "N_IF_STATEMENT", "N_WHILE_STATEMENT", "N_FOR_STATEMENT", YY_NULLPTR
 };
@@ -615,12 +619,12 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-67)
+#define YYPACT_NINF (-92)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-1)
+#define YYTABLE_NINF (-24)
 
 #define yytable_value_is_error(Yyn) \
   0
@@ -629,18 +633,19 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-     -67,    17,    47,   -67,    -7,    12,    20,   -67,    25,    13,
-      21,    27,   -67,    22,    34,   -14,   -67,   -67,   -67,   -67,
-      35,     0,    59,   -67,   -67,    42,   -67,    57,    50,    55,
-      56,    10,   -67,   -67,   -67,   -67,     0,    66,   -67,   -67,
-      83,   -67,    40,   -67,   -67,   -67,   -67,   -67,   -67,    84,
-      91,    93,    68,    73,    73,   -67,   -67,    94,    66,   -67,
-      90,    64,    95,   -67,   -67,   -67,    61,    61,    96,    73,
-     -67,   -67,    85,   104,   -67,   104,    73,    73,    73,    73,
-     -67,   -67,    61,   -67,    90,    74,    78,    98,    92,   -67,
-      94,    97,    99,    94,    49,    49,   -67,   -67,   -67,    61,
-      61,    42,    42,   102,   -67,   104,   103,   -67,   -67,   -67,
-      42,    94,   -67
+     -92,    20,    80,   -92,    -5,    13,    47,   -92,    14,    18,
+     -92,   -92,    69,   -92,    70,    86,   100,    40,   -92,   -92,
+     -92,    93,    89,    60,   117,   -92,   -92,    90,   -92,   -92,
+     106,    98,    97,    94,    68,   -92,   -92,   -92,   -92,    60,
+      89,   -92,   -92,   111,   -92,    39,   -92,    99,   -92,   -92,
+     -92,   -92,   -92,   103,   105,   107,    65,    81,    81,   -92,
+     -92,   108,    89,   -92,   -18,    84,    87,   101,   -92,   104,
+     -92,   -92,   -92,   -92,     7,     7,   109,   -92,   112,   -92,
+      92,   110,   -92,    81,   -92,    89,    81,    81,    81,    81,
+     -92,   -92,   -92,     7,   -92,   112,   -10,     1,   113,   -92,
+     120,    71,   115,    82,    82,   -92,   -92,   -92,     7,     7,
+      90,    90,   114,   108,   118,   119,   120,   125,   -92,   -92,
+     -92,    90,   -92,   120,   108,   -92,   108
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -648,34 +653,35 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-      38,     0,     0,     1,     0,     0,    19,    20,     0,     0,
-       0,     0,    37,     0,     0,    39,    34,    35,    36,    44,
-       0,    47,     0,    40,    38,     0,    19,     0,     0,    46,
-       0,     0,    44,     2,    49,    45,     0,    42,    43,    56,
-       0,    41,     0,    48,     3,     5,     4,     6,     7,     0,
-       0,     0,    11,     0,     0,    50,    27,    14,     8,     9,
-      28,     0,     0,    52,    53,    54,     0,     0,     0,     0,
-      11,    26,     0,    16,    12,     0,     0,     0,     0,     0,
-      55,    51,     0,    32,    33,     0,     0,     0,    57,    25,
-      18,     0,    15,    13,    22,    21,    23,    24,    31,     0,
-       0,     0,     0,     0,    10,     0,    29,    30,    58,    59,
-       0,    17,    60
+      40,     0,     0,     1,     0,     0,    22,    23,     0,     0,
+      42,    41,     0,    39,     0,     0,     0,    43,    38,    37,
+      50,     0,    44,    53,     0,    45,    40,     0,    46,    22,
+       0,     0,    52,     0,     0,    50,     2,    55,    51,     0,
+      48,    49,    65,     0,    47,     0,    54,     0,     3,     5,
+       4,     6,     7,     0,     0,     0,    11,     0,     0,    56,
+      30,    16,     8,     9,    31,     0,     0,     0,    64,     0,
+      58,    59,    60,    63,     0,     0,     0,    11,    31,    29,
+       0,     0,    13,     0,    14,    43,     0,     0,     0,     0,
+      61,    62,    57,     0,    35,    36,     0,     0,     0,    28,
+      19,    66,     0,    25,    24,    26,    27,    34,     0,     0,
+       0,     0,     0,    21,     0,    18,     0,    32,    33,    67,
+      68,     0,    10,     0,    15,    69,    20
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -67,   -67,   -66,   -65,   -67,   -67,   -64,   -67,   -67,    -9,
-     -47,   -62,   105,   -67,   -33,   -67,    88,   -67,   -67,   -67,
-      -2,   -67,   -67,   -67,   -67,   -67
+     -92,   -92,   -72,   -91,   -92,   -92,   -92,   -41,   -92,   -92,
+     -92,   -92,    34,   -27,   -70,   121,   116,   -92,   -21,   -92,
+     102,   -92,   -92,   -92,   -45,   -92,   -92,   -92,   -92,   -92
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     1,    56,    57,    58,    59,    60,    91,    92,     8,
-      61,    85,     2,     9,    23,    10,    24,    11,    28,    29,
-      33,    42,    62,    63,    64,    65
+       0,     1,    60,    61,    62,    81,    63,    78,   102,    84,
+     114,   115,     8,    66,    96,     2,     9,    10,    25,    11,
+      26,    12,    31,    32,    36,    45,    69,    70,    71,    72
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -683,78 +689,87 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      83,    83,    84,    84,    41,    86,    71,    72,    90,    21,
-      93,     4,    27,    26,     7,    22,    83,     3,    84,     5,
-      98,    12,    88,    26,     7,    74,    13,    40,    14,    94,
-      95,    96,    97,    83,    83,    84,    84,   106,   107,    15,
-     111,    16,    38,    44,    45,    46,    47,    48,     4,    17,
-      49,    50,    51,    19,    52,    18,     5,    20,    53,    25,
-       6,     7,    30,    54,    44,    45,    46,    47,    48,    78,
-      79,    34,    55,    32,    35,    70,    44,    45,    46,    47,
-      48,    36,    76,    77,    78,    79,    37,    70,    82,    99,
-     100,    53,    80,    99,   100,    22,    54,    43,   101,   108,
-     109,    69,   102,    76,    77,    78,    79,    66,   112,    89,
-      76,    77,    78,    79,    67,    75,    68,    73,    70,   100,
-      39,   104,    87,    81,   103,   105,   110,     0,     0,    31
+      68,    28,    94,    94,    64,    97,   108,   109,   -17,   113,
+      48,    49,    50,    51,    52,   110,    83,   108,   109,    44,
+       3,    94,    77,   107,    13,   124,   111,    16,    14,    17,
+      79,    80,   126,    95,    95,    93,    94,    94,   117,   118,
+      47,    82,    48,    49,    50,    51,    52,    18,     5,    53,
+      54,    55,    95,    29,    56,    15,   101,    30,    57,   103,
+     104,   105,   106,    58,    23,   119,   120,    95,    95,     4,
+      24,    35,    59,    43,    29,     7,   125,     5,   -23,    65,
+     -23,     4,    29,     7,    48,    49,    50,    51,    52,     5,
+      86,    87,    88,    89,     6,     7,    77,    16,    19,    85,
+      57,    41,    20,    88,    89,    58,    86,    87,    88,    89,
+      21,    86,    87,    88,    89,    22,    90,    99,    27,    24,
+      33,    37,    35,    38,    39,    40,    46,    74,    73,    75,
+      91,    76,   -12,    92,   100,    77,    98,    42,   -17,   121,
+     112,   116,   109,   122,     0,     0,   123,    34,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,    67
 };
 
 static const yytype_int8 yycheck[] =
 {
-      66,    67,    66,    67,    37,    67,    53,    54,    73,    23,
-      75,     1,    21,    13,    14,    29,    82,     0,    82,     9,
-      82,    28,    69,    13,    14,    58,    14,    36,     8,    76,
-      77,    78,    79,    99,   100,    99,   100,    99,   100,    14,
-     105,    28,    32,     3,     4,     5,     6,     7,     1,    28,
-      10,    11,    12,    31,    14,    28,     9,    23,    18,    24,
-      13,    14,     3,    23,     3,     4,     5,     6,     7,    20,
-      21,    14,    32,    31,    24,    14,     3,     4,     5,     6,
-       7,    26,    18,    19,    20,    21,    30,    14,    27,    15,
-      16,    18,    28,    15,    16,    29,    23,    14,    24,   101,
-     102,    33,    24,    18,    19,    20,    21,    23,   110,    24,
-      18,    19,    20,    21,    23,    25,    23,    23,    14,    16,
-      32,    24,    26,    28,    26,    26,    24,    -1,    -1,    24
+      45,    22,    74,    75,    45,    75,    16,    17,    26,   100,
+       3,     4,     5,     6,     7,    25,    34,    16,    17,    40,
+       0,    93,    15,    93,    29,   116,    25,    13,    15,    15,
+      57,    58,   123,    74,    75,    28,   108,   109,   108,   109,
+       1,    62,     3,     4,     5,     6,     7,    29,     9,    10,
+      11,    12,    93,    14,    15,     8,    83,    23,    19,    86,
+      87,    88,    89,    24,    24,   110,   111,   108,   109,     1,
+      30,    32,    33,    39,    14,    15,   121,     9,    13,    45,
+      15,     1,    14,    15,     3,     4,     5,     6,     7,     9,
+      19,    20,    21,    22,    14,    15,    15,    13,    29,    15,
+      19,    33,    32,    21,    22,    24,    19,    20,    21,    22,
+      24,    19,    20,    21,    22,    15,    29,    25,    25,    30,
+       3,    15,    32,    25,    27,    31,    15,    24,    29,    24,
+      29,    24,    24,    29,    24,    15,    27,    35,    26,    25,
+      27,    26,    17,    25,    -1,    -1,    27,    26,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    45
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,    35,    46,     0,     1,     9,    13,    14,    43,    47,
-      49,    51,    28,    14,     8,    14,    28,    28,    28,    31,
-      23,    23,    29,    48,    50,    24,    13,    43,    52,    53,
-       3,    46,    31,    54,    14,    24,    26,    30,    32,    50,
-      43,    48,    55,    14,     3,     4,     5,     6,     7,    10,
-      11,    12,    14,    18,    23,    32,    36,    37,    38,    39,
-      40,    44,    56,    57,    58,    59,    23,    23,    23,    33,
-      14,    44,    44,    23,    48,    25,    18,    19,    20,    21,
-      28,    28,    27,    36,    40,    45,    45,    26,    44,    24,
-      37,    41,    42,    37,    44,    44,    44,    44,    45,    15,
-      16,    24,    24,    26,    24,    26,    45,    45,    54,    54,
-      24,    37,    54
+       0,    36,    50,     0,     1,     9,    14,    15,    47,    51,
+      52,    54,    56,    29,    15,     8,    13,    15,    29,    29,
+      32,    24,    15,    24,    30,    53,    55,    25,    53,    14,
+      47,    57,    58,     3,    50,    32,    59,    15,    25,    27,
+      31,    33,    55,    47,    53,    60,    15,     1,     3,     4,
+       5,     6,     7,    10,    11,    12,    15,    19,    24,    33,
+      37,    38,    39,    41,    42,    47,    48,    51,    59,    61,
+      62,    63,    64,    29,    24,    24,    24,    15,    42,    48,
+      48,    40,    53,    34,    44,    15,    19,    20,    21,    22,
+      29,    29,    29,    28,    37,    42,    49,    49,    27,    25,
+      24,    48,    43,    48,    48,    48,    48,    49,    16,    17,
+      25,    25,    27,    38,    45,    46,    26,    49,    49,    59,
+      59,    25,    25,    27,    38,    59,    38
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    34,    35,    36,    36,    36,    36,    36,    37,    37,
-      38,    38,    39,    40,    40,    41,    41,    42,    42,    43,
-      43,    44,    44,    44,    44,    44,    44,    44,    44,    45,
-      45,    45,    45,    45,    46,    46,    46,    46,    46,    47,
-      47,    48,    48,    49,    50,    51,    52,    52,    53,    53,
-      54,    55,    55,    55,    55,    55,    55,    56,    57,    58,
-      59
+       0,    35,    36,    37,    37,    37,    37,    37,    38,    38,
+      39,    39,    40,    41,    43,    42,    42,    44,    45,    45,
+      46,    46,    47,    47,    48,    48,    48,    48,    48,    48,
+      48,    48,    49,    49,    49,    49,    49,    50,    50,    50,
+      50,    51,    51,    52,    52,    52,    52,    53,    53,    54,
+      55,    56,    57,    57,    58,    58,    59,    60,    60,    60,
+      60,    60,    60,    60,    60,    60,    61,    62,    63,    64
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     6,     1,     1,     1,     1,     1,     1,     1,
-       4,     1,     2,     3,     1,     1,     0,     3,     1,     1,
-       1,     3,     3,     3,     3,     3,     2,     1,     1,     3,
-       3,     2,     1,     1,     3,     3,     3,     3,     0,     2,
-       3,     4,     3,     6,     0,     5,     1,     0,     4,     2,
-       4,     3,     2,     2,     2,     3,     0,     3,     5,     5,
-       6
+       5,     1,     0,     2,     0,     5,     1,     0,     1,     0,
+       3,     1,     1,     1,     3,     3,     3,     3,     3,     2,
+       1,     1,     3,     3,     2,     1,     1,     3,     3,     3,
+       0,     1,     1,     2,     3,     3,     4,     4,     3,     6,
+       0,     5,     1,     0,     4,     2,     4,     3,     2,     2,
+       2,     3,     3,     3,     2,     0,     3,     5,     5,     6
 };
 
 
@@ -1218,148 +1233,294 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' ')' N_BLOCK  */
-#line 115 "compiler.ypp"
+#line 118 "compiler.ypp"
                                              {
-        for ( auto e : * pGlobalScope->getSymbolTable()->getSymbols() ) {
-            std :: cout << e->getTypeName() << ' ' << e->getName() << '\n';
+        debugOut << "Scope: " << pCurrentScope << '\n' << "With variables:\n";
+        for ( auto e : * pCurrentScope->getSymbolTable()->getSymbols() ) {
+            debugOut << e->getTypeName() << ' ' << e->getName() << '\n';
         }
+        debugOut << "And types:\n";
+        for ( auto e : * pCurrentScope->getTypeTable()->getTypes() ) {
+            debugOut << e->getName() << ' ' << e->getLength() << '\n';
+        }
+        debugOut << '\n';
+        
+        std :: cout << "Error count: " << errorCount << '\n';
     }
-#line 1228 "compiler.cpp"
+#line 1251 "compiler.cpp"
     break;
 
   case 4: /* N_CONSTANT_VALUE: T_FLOAT_NUMBER  */
-#line 123 "compiler.ypp"
+#line 134 "compiler.ypp"
                    { }
-#line 1234 "compiler.cpp"
+#line 1257 "compiler.cpp"
     break;
 
   case 5: /* N_CONSTANT_VALUE: T_CHAR_VALUE  */
-#line 124 "compiler.ypp"
+#line 135 "compiler.ypp"
                  { }
-#line 1240 "compiler.cpp"
+#line 1263 "compiler.cpp"
     break;
 
   case 6: /* N_CONSTANT_VALUE: T_BOOL_VALUE  */
-#line 125 "compiler.ypp"
+#line 136 "compiler.ypp"
                  { }
-#line 1246 "compiler.cpp"
+#line 1269 "compiler.cpp"
     break;
 
   case 7: /* N_CONSTANT_VALUE: T_STRING_VALUE  */
-#line 126 "compiler.ypp"
+#line 137 "compiler.ypp"
                    { }
-#line 1252 "compiler.cpp"
+#line 1275 "compiler.cpp"
     break;
 
-  case 16: /* N_PARAMETER: %empty  */
-#line 145 "compiler.ypp"
-    { (yyval.pStringList) = new std :: list < char const * >; }
-#line 1258 "compiler.cpp"
-    break;
-
-  case 17: /* N_PARAMETER_LIST: N_PARAMETER_LIST ',' N_SYMBOL_ACCESS  */
-#line 148 "compiler.ypp"
-                                         {
-        (yyvsp[-2].pStringList)->push_back ( (yyvsp[0].stringValue) );
-        (yyval.pStringList) = (yyvsp[-2].pStringList);
+  case 10: /* N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')'  */
+#line 144 "compiler.ypp"
+                                                                        {
+        if ( pCurrentScope != nullptr ) {
+            auto pFunction = dynamic_cast < FunctionEntry * > ( (yyvsp[-4].pSymbol) );
+            if ( pFunction == nullptr ) {
+                error :: nonFunctionCallError ( (yyvsp[-4].pSymbol)->getName() );
+            } else {
+                pFunction->matchParameterList ( (yyvsp[-1].pSymbolList) );
+            }
+        }
+        pCurrentScope = (yyvsp[-3].pScope);
     }
-#line 1267 "compiler.cpp"
+#line 1291 "compiler.cpp"
     break;
 
-  case 18: /* N_PARAMETER_LIST: N_SYMBOL_ACCESS  */
-#line 152 "compiler.ypp"
+  case 11: /* N_NON_ARRAY_SYMBOL_ACCESS: T_IDENTIFIER  */
+#line 155 "compiler.ypp"
+                 {
+        if ( pCurrentScope != nullptr ) {
+            auto pSymbol = pCurrentScope->getSymbol ( (yyvsp[0].stringValue) );
+            if ( pSymbol == nullptr ) {
+                (yyval.pSymbol) = new VariableEntry ( (yyvsp[0].stringValue), nullptr );
+            } else {
+                (yyval.pSymbol) = pSymbol;
+            }
+        } else {
+            (yyval.pSymbol) = new VariableEntry ( (yyvsp[0].stringValue), nullptr );
+        }
+    }
+#line 1308 "compiler.cpp"
+    break;
+
+  case 12: /* M_PARAMETER_LOOKUP_SCOPE_CHANGE: %empty  */
+#line 169 "compiler.ypp"
+    { (yyval.pScope) = pCurrentScope; pCurrentScope = pNonClassScope; }
+#line 1314 "compiler.cpp"
+    break;
+
+  case 13: /* N_ARRAY_SYMBOL_ACCESS: N_NON_ARRAY_SYMBOL_ACCESS N_ARRAY_SUBSCRIPT  */
+#line 172 "compiler.ypp"
+                                                {
+        auto pType = (yyvsp[-1].pSymbol)->getType();
+        if ( pType != nullptr ) {
+            if ( pType->getName()[0] != 'A' ) {
+                error :: nonArrayTypeArrayAccess ( (yyvsp[-1].pSymbol)->getName() );
+            } else {
+                if ( pType->matchArraySubscript ( (yyvsp[0].pArraytypePair) ) ) {
+
+                }
+            }
+        } 
+        (yyval.pSymbol) = (yyvsp[-1].pSymbol);
+    }
+#line 1332 "compiler.cpp"
+    break;
+
+  case 14: /* $@1: %empty  */
+#line 187 "compiler.ypp"
+                                                  {
+        if ( (yyvsp[-1].pSymbol)->getType() != nullptr ) {
+            std :: string typeName = (yyvsp[-1].pSymbol)->getTypeName();
+            if ( typeName[0] < '0' || typeName[0] > '9' ) {
+                error :: nonStructureType ( typeName.c_str() );
+                pCurrentScope = nullptr;
+            } else {
+                pCurrentScope = ( reinterpret_cast < StructuredTypeEntry * > ( (yyvsp[-1].pSymbol)->getType() ) )->getScope();
+            }
+        } else {
+            pCurrentScope = nullptr;
+        }
+    }
+#line 1350 "compiler.cpp"
+    break;
+
+  case 15: /* N_VARIABLE_ACCESS: N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' N_SYMBOL_ACCESS  */
+#line 199 "compiler.ypp"
+                          { 
+        if ( pCurrentScope != nullptr ) {
+            if ( (yyvsp[0].pSymbol)->getType() == nullptr ) {
+                error :: nonExistentMember ( (yyvsp[-4].pSymbol)->getTypeName().c_str(), (yyvsp[-4].pSymbol)->getName() );
+            }
+        } 
+        pCurrentScope = (yyvsp[-3].pScope);
+        (yyval.pSymbol) = (yyvsp[0].pSymbol);
+    }
+#line 1364 "compiler.cpp"
+    break;
+
+  case 16: /* N_VARIABLE_ACCESS: N_SYMBOL_ACCESS  */
+#line 208 "compiler.ypp"
                     {
-        (yyval.pStringList) = new std :: list < char const * >;
-        (yyval.pStringList)->push_back( (yyvsp[0].stringValue) );
+        if ( (yyvsp[0].pSymbol)->getType() == nullptr ) {
+            error :: undeclaredSymbol ( (yyvsp[0].pSymbol)->getName() );
+        }
+        (yyval.pSymbol) = (yyvsp[0].pSymbol);
     }
-#line 1276 "compiler.cpp"
+#line 1375 "compiler.cpp"
     break;
 
-  case 25: /* N_EXPRESSION: '(' N_EXPRESSION ')'  */
-#line 167 "compiler.ypp"
+  case 17: /* M_CLASS_ACCESS_SCOPE_CHANGE: %empty  */
+#line 216 "compiler.ypp"
+    { (yyval.pScope) = pCurrentScope; }
+#line 1381 "compiler.cpp"
+    break;
+
+  case 18: /* N_PARAMETER: N_PARAMETER_LIST  */
+#line 219 "compiler.ypp"
+                     {
+        (yyval.pSymbolList) = (yyvsp[0].pSymbolList);
+    }
+#line 1389 "compiler.cpp"
+    break;
+
+  case 19: /* N_PARAMETER: %empty  */
+#line 222 "compiler.ypp"
+    { (yyval.pSymbolList) = new IdentifierList; }
+#line 1395 "compiler.cpp"
+    break;
+
+  case 20: /* N_PARAMETER_LIST: N_PARAMETER_LIST ',' N_SYMBOL_ACCESS  */
+#line 225 "compiler.ypp"
+                                         {
+        (yyvsp[-2].pSymbolList)->push_back ( (yyvsp[0].pSymbol) );
+        (yyval.pSymbolList) = (yyvsp[-2].pSymbolList);
+    }
+#line 1404 "compiler.cpp"
+    break;
+
+  case 21: /* N_PARAMETER_LIST: N_SYMBOL_ACCESS  */
+#line 229 "compiler.ypp"
+                    {
+        (yyval.pSymbolList) = new IdentifierList;
+        (yyval.pSymbolList)->push_back ( (yyvsp[0].pSymbol) );
+    }
+#line 1413 "compiler.cpp"
+    break;
+
+  case 28: /* N_EXPRESSION: '(' N_EXPRESSION ')'  */
+#line 244 "compiler.ypp"
                          {}
-#line 1282 "compiler.cpp"
+#line 1419 "compiler.cpp"
     break;
 
-  case 26: /* N_EXPRESSION: '-' N_EXPRESSION  */
-#line 168 "compiler.ypp"
+  case 29: /* N_EXPRESSION: '-' N_EXPRESSION  */
+#line 245 "compiler.ypp"
                                   {}
-#line 1288 "compiler.cpp"
+#line 1425 "compiler.cpp"
     break;
 
-  case 28: /* N_EXPRESSION: N_MEMBER_ACCESS  */
-#line 170 "compiler.ypp"
-                    { }
-#line 1294 "compiler.cpp"
+  case 31: /* N_EXPRESSION: N_VARIABLE_ACCESS  */
+#line 247 "compiler.ypp"
+                      { }
+#line 1431 "compiler.cpp"
     break;
 
-  case 31: /* N_BOOL_EXPRESSION: '!' N_BOOL_EXPRESSION  */
-#line 176 "compiler.ypp"
+  case 34: /* N_BOOL_EXPRESSION: '!' N_BOOL_EXPRESSION  */
+#line 253 "compiler.ypp"
                                      { }
-#line 1300 "compiler.cpp"
+#line 1437 "compiler.cpp"
     break;
 
-  case 32: /* N_BOOL_EXPRESSION: N_CONSTANT_VALUE  */
-#line 177 "compiler.ypp"
+  case 35: /* N_BOOL_EXPRESSION: N_CONSTANT_VALUE  */
+#line 254 "compiler.ypp"
                      { }
-#line 1306 "compiler.cpp"
+#line 1443 "compiler.cpp"
     break;
 
-  case 33: /* N_BOOL_EXPRESSION: N_MEMBER_ACCESS  */
-#line 178 "compiler.ypp"
-                    { }
-#line 1312 "compiler.cpp"
+  case 36: /* N_BOOL_EXPRESSION: N_VARIABLE_ACCESS  */
+#line 255 "compiler.ypp"
+                      { }
+#line 1449 "compiler.cpp"
     break;
 
-  case 38: /* N_DECLARATION: %empty  */
-#line 186 "compiler.ypp"
+  case 39: /* N_DECLARATION: N_DECLARATION error ';'  */
+#line 261 "compiler.ypp"
+                            { ++ errorCount; }
+#line 1455 "compiler.cpp"
+    break;
+
+  case 40: /* N_DECLARATION: %empty  */
+#line 262 "compiler.ypp"
     { }
-#line 1318 "compiler.cpp"
+#line 1461 "compiler.cpp"
     break;
 
-  case 39: /* N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER  */
-#line 189 "compiler.ypp"
+  case 43: /* N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER  */
+#line 271 "compiler.ypp"
                               {
         pCurrentScope->addVariable ( (yyvsp[-1].stringValue), (yyvsp[0].stringValue) );
     }
-#line 1326 "compiler.cpp"
+#line 1469 "compiler.cpp"
     break;
 
-  case 40: /* N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT  */
-#line 192 "compiler.ypp"
+  case 44: /* N_VARIABLE_DECLARATION: N_MIXED_TYPE T_CONST T_IDENTIFIER  */
+#line 274 "compiler.ypp"
+                                      {
+        std :: string constType = std :: string ( (yyvsp[-2].stringValue) ) + "$const";
+        pCurrentScope->addVariable ( constType.c_str(), (yyvsp[0].stringValue) );
+    }
+#line 1478 "compiler.cpp"
+    break;
+
+  case 45: /* N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT  */
+#line 278 "compiler.ypp"
                                                 {
         pCurrentScope->addArrayVariable ( (yyvsp[-2].stringValue), (yyvsp[-1].stringValue), (yyvsp[0].pArraytypePair)->first, (yyvsp[0].pArraytypePair)->second );
     }
-#line 1334 "compiler.cpp"
+#line 1486 "compiler.cpp"
     break;
 
-  case 41: /* N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT  */
-#line 197 "compiler.ypp"
+  case 46: /* N_VARIABLE_DECLARATION: N_MIXED_TYPE T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT  */
+#line 281 "compiler.ypp"
+                                                        {
+        std :: string constType = std :: string ( (yyvsp[-3].stringValue) ) + "$const";
+        pCurrentScope->addArrayVariable ( constType.c_str(), (yyvsp[-1].stringValue), (yyvsp[0].pArraytypePair)->first, (yyvsp[0].pArraytypePair)->second );
+    }
+#line 1495 "compiler.cpp"
+    break;
+
+  case 47: /* N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT  */
+#line 288 "compiler.ypp"
                                            {
         char * pAux = new char;
         sprintf ( pAux, "A%d_", (yyvsp[-2].intValue) );
         strcat ( pAux, (yyvsp[0].pArraytypePair)->first );
-        (yyval.pArraytypePair) = new std :: pair < char *, Scope :: TypeLength >;
+        (yyval.pArraytypePair) = new ArraytypePair;
         (yyval.pArraytypePair)->first = pAux;
         (yyval.pArraytypePair)->second = (yyvsp[0].pArraytypePair)->second * (yyvsp[-2].intValue);
         delete (yyvsp[0].pArraytypePair);
     }
-#line 1348 "compiler.cpp"
+#line 1509 "compiler.cpp"
     break;
 
-  case 42: /* N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']'  */
-#line 206 "compiler.ypp"
+  case 48: /* N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']'  */
+#line 297 "compiler.ypp"
                          { 
-        (yyval.pArraytypePair) = new std :: pair < char *, Scope :: TypeLength >;
+        (yyval.pArraytypePair) = new ArraytypePair;
         (yyval.pArraytypePair)->first = new char;
         sprintf ( (yyval.pArraytypePair)->first, "A%d_", (yyvsp[-1].intValue) );
         (yyval.pArraytypePair)->second = (yyvsp[-1].intValue);
     }
-#line 1359 "compiler.cpp"
+#line 1520 "compiler.cpp"
     break;
 
-  case 43: /* N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION '}'  */
-#line 217 "compiler.ypp"
+  case 49: /* N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION '}'  */
+#line 309 "compiler.ypp"
         {
         auto classScope = pCurrentScope;
         pCurrentScope = pCurrentScope->getUpperScope();
@@ -1368,88 +1529,112 @@ yyreduce:
             pCurrentScope->setUserDefinedTypeLength ( pNewEntry );
         }
     }
-#line 1372 "compiler.cpp"
+#line 1533 "compiler.cpp"
     break;
 
-  case 44: /* M_BLOCK_BEGIN: %empty  */
-#line 226 "compiler.ypp"
+  case 50: /* M_BLOCK_BEGIN: %empty  */
+#line 319 "compiler.ypp"
                { 
-        auto newScope = new Scope ( pCurrentScope, pGlobalScope );
-        pCurrentScope = newScope; 
+        auto newScope = new Scope ( pCurrentScope );
+        pCurrentScope = pNonClassScope = newScope; 
     }
-#line 1381 "compiler.cpp"
+#line 1542 "compiler.cpp"
     break;
 
-  case 45: /* N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')'  */
-#line 232 "compiler.ypp"
+  case 51: /* N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')'  */
+#line 326 "compiler.ypp"
                                                               {
-        pCurrentScope->addFunction ( (yyvsp[-3].stringValue), (yyvsp[-4].stringValue), nullptr, (yyvsp[-1].pStringList) );
+        pCurrentScope->addFunction ( (yyvsp[-3].stringValue), (yyvsp[-4].stringValue), nullptr, (yyvsp[-1].pParamDeclarationList), nullptr );
     }
-#line 1389 "compiler.cpp"
+#line 1550 "compiler.cpp"
     break;
 
-  case 47: /* N_PARAMETER_DECLARATION: %empty  */
-#line 238 "compiler.ypp"
-    { (yyval.pStringList) = new std :: list < char const * >; }
-#line 1395 "compiler.cpp"
+  case 53: /* N_PARAMETER_DECLARATION: %empty  */
+#line 332 "compiler.ypp"
+    { (yyval.pParamDeclarationList) = new ParameterDeclarationList; }
+#line 1556 "compiler.cpp"
     break;
 
-  case 48: /* N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE T_IDENTIFIER  */
-#line 241 "compiler.ypp"
+  case 54: /* N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE T_IDENTIFIER  */
+#line 336 "compiler.ypp"
                                                                {
-        (yyvsp[-3].pStringList)->push_back ( (yyvsp[-1].stringValue) );
-        (yyval.pStringList) = (yyvsp[-3].pStringList);
+        (yyvsp[-3].pParamDeclarationList)->push_back ( new ParameterDeclarationPair { (yyvsp[-1].stringValue), (yyvsp[0].stringValue) } );
+        (yyval.pParamDeclarationList) = (yyvsp[-3].pParamDeclarationList);
     }
-#line 1404 "compiler.cpp"
+#line 1565 "compiler.cpp"
     break;
 
-  case 49: /* N_PARAMETER_DECLARATION_LIST: N_MIXED_TYPE T_IDENTIFIER  */
-#line 245 "compiler.ypp"
+  case 55: /* N_PARAMETER_DECLARATION_LIST: N_MIXED_TYPE T_IDENTIFIER  */
+#line 340 "compiler.ypp"
                               {
-        (yyval.pStringList) = new std :: list < char const * >;
-        (yyval.pStringList)->push_back( (yyvsp[-1].stringValue) );
+        (yyval.pParamDeclarationList) = new ParameterDeclarationList;
+        (yyval.pParamDeclarationList)->push_back( new ParameterDeclarationPair { (yyvsp[-1].stringValue), (yyvsp[0].stringValue) } );
     }
-#line 1413 "compiler.cpp"
+#line 1574 "compiler.cpp"
     break;
 
-  case 50: /* N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}'  */
-#line 250 "compiler.ypp"
-                                           { }
-#line 1419 "compiler.cpp"
+  case 56: /* N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}'  */
+#line 346 "compiler.ypp"
+                                           {
+        (yyval.pScope) = pCurrentScope;
+        debugOut << "Scope: " << pCurrentScope << '\n' << "With variables:\n";
+        for ( auto e : * pCurrentScope->getSymbolTable()->getSymbols() ) {
+            debugOut << e->getTypeName() << ' ' << e->getName() << '\n';
+        }
+        debugOut << "And types:\n";
+        for ( auto e : * pCurrentScope->getTypeTable()->getTypes() ) {
+            debugOut << e->getName() << ' ' << e->getLength() << '\n';
+        }
+        debugOut << '\n';
+        pCurrentScope = pCurrentScope->getUpperScope();
+    }
+#line 1592 "compiler.cpp"
     break;
 
-  case 56: /* N_STATEMENT: %empty  */
-#line 258 "compiler.ypp"
-    { }
-#line 1425 "compiler.cpp"
-    break;
-
-  case 57: /* N_ASSIGNMENT: T_IDENTIFIER '=' N_EXPRESSION  */
-#line 261 "compiler.ypp"
-                                  { }
-#line 1431 "compiler.cpp"
-    break;
-
-  case 58: /* N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION ')' N_BLOCK  */
-#line 264 "compiler.ypp"
-                                           { }
-#line 1437 "compiler.cpp"
-    break;
-
-  case 59: /* N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION ')' N_BLOCK  */
-#line 267 "compiler.ypp"
+  case 62: /* N_STATEMENT: N_STATEMENT N_BLOCK_SCOPE_DECLARATION ';'  */
+#line 367 "compiler.ypp"
                                               { }
-#line 1443 "compiler.cpp"
+#line 1598 "compiler.cpp"
     break;
 
-  case 60: /* N_FOR_STATEMENT: T_FOR '(' ',' ',' ')' N_BLOCK  */
-#line 270 "compiler.ypp"
+  case 63: /* N_STATEMENT: N_STATEMENT error ';'  */
+#line 368 "compiler.ypp"
+                          { ++ errorCount; }
+#line 1604 "compiler.cpp"
+    break;
+
+  case 65: /* N_STATEMENT: %empty  */
+#line 370 "compiler.ypp"
+    { }
+#line 1610 "compiler.cpp"
+    break;
+
+  case 66: /* N_ASSIGNMENT: N_VARIABLE_ACCESS '=' N_EXPRESSION  */
+#line 374 "compiler.ypp"
+                                       { }
+#line 1616 "compiler.cpp"
+    break;
+
+  case 67: /* N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION ')' N_BLOCK  */
+#line 378 "compiler.ypp"
+                                           { }
+#line 1622 "compiler.cpp"
+    break;
+
+  case 68: /* N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION ')' N_BLOCK  */
+#line 382 "compiler.ypp"
+                                              { }
+#line 1628 "compiler.cpp"
+    break;
+
+  case 69: /* N_FOR_STATEMENT: T_FOR '(' ',' ',' ')' N_BLOCK  */
+#line 386 "compiler.ypp"
                                   { }
-#line 1449 "compiler.cpp"
+#line 1634 "compiler.cpp"
     break;
 
 
-#line 1453 "compiler.cpp"
+#line 1638 "compiler.cpp"
 
       default: break;
     }
@@ -1642,4 +1827,4 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 271 "compiler.ypp"
+#line 388 "compiler.ypp"

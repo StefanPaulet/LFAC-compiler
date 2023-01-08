@@ -22,5 +22,6 @@ public:
     
 };
 
+#include "../impl/TypeEntry.hpp"
 
 #endif //__STRUCTURED_TYPE_ENTRY_HPP__

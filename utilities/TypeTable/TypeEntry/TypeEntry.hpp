@@ -7,6 +7,7 @@ class TypeEntry {
 
 public:
     using TypeLength = unsigned short int;
+    using ArraytypePair = std :: pair < char *, TypeLength >;
 
 protected:
     char const * _pName { nullptr };
@@ -20,39 +21,30 @@ public:
 
     TypeEntry ( 
         char const * pName 
-    ) : _pName ( strdup ( pName ) ) {
-
-    }
+    );
 
 
     TypeEntry ( 
         char const * pName,
         TypeLength   length
-    ) : 
-        _pName  ( strdup ( pName ) ),
-        _length ( length ) {
-
-        }
+    );
 
 
-    constexpr auto getName () const -> char const * const {
-        
-        return this->_pName;
-    }
+    constexpr auto getName () const -> char const * const;
 
 
-    constexpr auto getLength () const -> TypeLength {
-
-        return this->_length;
-    }
+    constexpr auto getLength () const -> TypeLength;
 
 
     auto setLength (
         TypeLength length
-    ) -> void {
+    ) -> void;
 
-        this->_length = length;
-    }
+
+    auto matchArraySubscript (
+        ArraytypePair * pArraytype
+    ) -> bool;
+
 };
 
 #endif //__TYPE_ENTRY_HPP__

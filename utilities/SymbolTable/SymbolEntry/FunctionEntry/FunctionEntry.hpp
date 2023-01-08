@@ -3,15 +3,17 @@
 
 #include "../SymbolEntry.hpp"
 #include "../../../AbstractSyntaxTree/TreeNodeIdentifier.hpp"
-#include "../../../TypeTable/TypeEntry/TypeEntry.hpp"
 #include <list>
 #include <utility>
 #include <stdio.h>
 
+class Scope;
+
 class FunctionEntry : public SymbolEntry {
 
 public:
-    using ParameterList  = std :: list < TypeEntry * >;
+    using ParameterPair  = std :: pair < TypeEntry *, char const * >;
+    using ParameterList  = std :: list < ParameterPair * >;
     
 private:
     TypeEntry * _pReturnType;
@@ -20,13 +22,16 @@ private:
 
     ParameterList * _pParameterList;
 
+    Scope * _pScope;
+
 public:
 
     FunctionEntry ( 
-        char const              * pname,
-        TypeEntry               * pReturnType,
-        TreeNodeIdentifier      * pFunctionBody,
-        ParameterList           * pParameterList
+        char const          * pname,
+        TypeEntry           * pReturnType,
+        TreeNodeIdentifier  * pFunctionBody,
+        ParameterList       * pParameterList,
+        Scope               * pScope
     );
 
 
@@ -34,7 +39,14 @@ public:
 
 
     auto getTypeName () const -> std :: string override;
+
+
+    constexpr auto getType () const -> TypeEntry * override;
     
+
+    auto matchParameterList (
+        std :: list < SymbolEntry * > * pParameterList
+    ) -> bool;
 };
 
 #endif //__FUNCTION_ENTRY_HPP__

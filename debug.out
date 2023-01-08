@@ -1,0 +1,38 @@
+Scope: 0x562c167fa8c0
+With variables:
+int a
+And types:
+
+Scope: 0x562c167faa10
+With variables:
+And types:
+
+Scope: 0x562c167f99d0
+With variables:
+float d
+A2_A4_1B a
+1B X
+And types:
+A2_A4_1B 96
+1C 16
+1A 1
+
+Scope: 0x562c167f1210
+With variables:
+1B c
+A5_A2_A4_int x
+A2_A4_int y
+int() func
+int(1B,1A,int) funcg
+And types:
+nonExistentType 0
+char 1
+bool 1
+float 4
+int 4
+string 8
+1A 4
+1B 12
+A5_A2_A4_int 160
+A2_A4_int 32
+

@@ -1,25 +1,53 @@
-int a;
-float b;
-int g();
+int const a;
+float const b;
+int const d[3][5];
 class A {
     int a;
 };
+
 class B {
-    int a;
     int b;
+    float c;
     int g ( int a, float d );
+    A d;
 };
 B c;
 int x[5][2][4];
+int y[2][4];
+int func();
+int funcg(B d, A c, int x );
 int main() { 
+    float d;
+    funcg(c, dsfa, a);
+    x;
+    c.d.a;
+    c.d.a;
+    func();
+    c.g(a,d).a;
+    a = b;
+    
+    B a[2][4];
+    a[2][4].f;
+    class C {
+        float a;
+        float b;
+        int c[2];
+    };
+    class A{
+
+    };
+    C d;
+    B X;
+    {
+        int a;
+    }
     if ( 2 ) {
         x = 5;
     }
     x[2];
     x;
+    func()[2];
     x()[2]();
-    f()()()()[5]()[3][4][2]();
     x(x[2]);
-    f[5].x[5].x()[2].f();
-    f()[5].t[20]();
+    func()()[2]()[3];
 }

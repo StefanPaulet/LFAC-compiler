@@ -19,6 +19,7 @@ If if
 For for
 While while
 Main main
+Const const
 
 Band &&
 Bor \|\|
@@ -75,6 +76,10 @@ Identifier   ({letter}|_)({letter}|{digit}|_)*
 
 {Main} {
     return ( T_MAIN_IDENTIFIER );
+}
+
+{Const} {
+    return ( T_CONST );
 }
 
 {If} {

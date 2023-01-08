@@ -9,4 +9,4 @@ mv compiler.hpp ./temps
 mv compiler.output ./temps/parser_output
 
 gcc -c ./temps/scanner.c -o ./temps/scanner.o
-g++ ./temps/scanner.o ./temps/compiler.cpp ./temps/main.cpp -o compiler
+g++ -std=c++20 ./temps/scanner.o ./temps/compiler.cpp ./temps/main.cpp -o compiler

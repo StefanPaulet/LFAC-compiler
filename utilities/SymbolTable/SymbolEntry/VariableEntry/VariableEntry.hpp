@@ -2,7 +2,6 @@
 #define __VARIABLE_ENTRY_HPP__
 
 #include "../SymbolEntry.hpp"
-#include "../../../TypeTable/TypeEntry/TypeEntry.hpp"
 
 class Scope;
 
@@ -50,11 +49,14 @@ public:
         VarValue        val
     );
 
+
     ~VariableEntry ();
+
 
     auto getTypeName () const -> std :: string;
 
-    constexpr auto getType () const -> TypeEntry *;
+
+    constexpr auto getType () const -> TypeEntry * override;
 };
 
 #endif //__VARIABLE_ENTRY_HPP__

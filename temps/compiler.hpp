@@ -64,12 +64,13 @@ extern int yydebug;
     T_IF = 265,                    /* T_IF  */
     T_WHILE = 266,                 /* T_WHILE  */
     T_FOR = 267,                   /* T_FOR  */
-    T_TYPE = 268,                  /* T_TYPE  */
-    T_IDENTIFIER = 269,            /* T_IDENTIFIER  */
-    T_BAND = 270,                  /* T_BAND  */
-    T_BOR = 271,                   /* T_BOR  */
-    UNOT = 272,                    /* UNOT  */
-    UMINUS = 273                   /* UMINUS  */
+    T_CONST = 268,                 /* T_CONST  */
+    T_TYPE = 269,                  /* T_TYPE  */
+    T_IDENTIFIER = 270,            /* T_IDENTIFIER  */
+    T_BAND = 271,                  /* T_BAND  */
+    T_BOR = 272,                   /* T_BOR  */
+    UNOT = 273,                    /* UNOT  */
+    UMINUS = 274                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -78,7 +79,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 30 "compiler.ypp"
+#line 27 "compiler.ypp"
 
     int intValue;
     float floatValue;
@@ -88,12 +89,14 @@ union YYSTYPE
     
 #ifdef __cplusplus
     Scope * pScope;
-    FunctionEntry :: ParameterList * pParamList;
-    std :: list < char const * > * pStringList;
-    std :: pair < char *, Scope :: TypeLength > * pArraytypePair;
+    ParameterDeclarationList * pParamDeclarationList;
+    StringList * pStringList;
+    ArraytypePair * pArraytypePair;
+    SymbolEntry * pSymbol;
+    IdentifierList * pSymbolList;
 #endif
 
-#line 97 "compiler.hpp"
+#line 100 "compiler.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

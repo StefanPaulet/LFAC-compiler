@@ -3,26 +3,28 @@
 
 #include "../SymbolTable/SymbolTable.hpp"
 #include "../TypeTable/TypeTable.hpp"
-
-#include "../ErrorReporting/ErrorReporting.hpp"
 #include <list>
+
 
 class Scope {
 
 public:
-    using TypeLength    = TypeTable :: TypeLength;
-    using ParameterList = FunctionEntry :: ParameterList;
+    static Scope * pGlobalScope;
+
+public:
+    using TypeLength               = TypeTable :: TypeLength;
+    using ParameterList            = FunctionEntry :: ParameterList;
+    using ParameterDeclarationPair = std :: pair < char const *, char const * >;
+    using ParameterDeclarationList = std :: list < ParameterDeclarationPair * >;
 
 private:
     Scope        * _pUpperScope       { nullptr };
-    Scope        * _pGlobalScope      { nullptr };
     TypeTable    * _pTypes            = new TypeTable;
     SymbolTable  * _pSymbols          = new SymbolTable;
 
 public:
     Scope ( 
         Scope     * pUpperScope  = nullptr,
-        Scope     * pGlobalScope = nullptr,
         TypeTable * pTypes       = nullptr
     );
 
@@ -63,7 +65,8 @@ public:
         char const                   * pFunctionName,
         char const                   * pReturnTypeName,
         TreeNodeIdentifier           * pFunctionBody,
-        std :: list < char const * > * pParameterListTypes
+        ParameterDeclarationList     * pParameterListTypes,
+        Scope                        * pScope
     ) -> void;
 
 
@@ -76,6 +79,11 @@ public:
     auto setUserDefinedTypeLength (
         StructuredTypeEntry * pTypeEntry
     ) -> void;
+
+
+    auto getSymbol ( 
+        char const * pSymbolName
+    ) -> SymbolEntry *;
 };
 
 #include "../SymbolTable/impl/SymbolTable.hpp"

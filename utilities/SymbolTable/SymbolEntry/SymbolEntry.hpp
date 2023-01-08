@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <string>
+#include "../../TypeTable/TypeEntry/TypeEntry.hpp"
 
 class SymbolEntry {
     
@@ -34,6 +35,10 @@ public:
 
 
     virtual auto getTypeName () const -> std :: string = 0;
+
+
+    virtual auto getType () const -> TypeEntry * = 0;
+    
 };
 
 #endif //__SYMBOL_ENTRY_HPP__

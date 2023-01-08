@@ -1,4 +1,5 @@
 %{
+    #include <fstream>
     #include <iostream>
     #include "main.hpp"
 
@@ -8,23 +9,19 @@
 
     #include "../utilities/Scope/Scope.hpp"
     #include "../utilities/Scope/impl/Scope.hpp"
-    
-    Scope * pGlobalScope = new Scope ( 
-            nullptr,
-            nullptr,
-            new TypeTable (
-                new TypeTable :: TypeList {
-                    new TypeEntry ( "noTypeFunctionParameter", 0 ),
-                    new TypeEntry ( "char", 1 ),
-                    new TypeEntry ( "bool", 1 ),
-                    new TypeEntry ( "float", 4 ),
-                    new TypeEntry ( "int", 4 ),
-                    new TypeEntry ( "string", 8 )
-                }
-            )
-    );
 
-    Scope * pCurrentScope = pGlobalScope;
+    Scope * pCurrentScope = Scope :: pGlobalScope;
+    Scope * pNonClassScope;
+    std :: ofstream debugOut ( "debug.out" );
+
+    unsigned long long int errorCount = 0;
+
+    using StringList               = std :: list < char const * >;
+    using ArraytypePair            = TypeEntry :: ArraytypePair;
+    using ParameterDeclarationPair = Scope :: ParameterDeclarationPair;
+    using ParameterDeclarationList = Scope :: ParameterDeclarationList;
+    using IdentifierAccessPair     = std :: pair < char const *, SymbolEntry * >;
+    using IdentifierList           = std :: list < SymbolEntry * >;
 %}
 
 %union {
@@ -36,9 +33,11 @@
     
 #ifdef __cplusplus
     Scope * pScope;
-    FunctionEntry :: ParameterList * pParamList;
-    std :: list < char const * > * pStringList;
-    std :: pair < char *, Scope :: TypeLength > * pArraytypePair;
+    ParameterDeclarationList * pParamDeclarationList;
+    StringList * pStringList;
+    ArraytypePair * pArraytypePair;
+    SymbolEntry * pSymbol;
+    IdentifierList * pSymbolList;
 #endif
 }
     
@@ -54,6 +53,7 @@
 %token T_IF
 %token T_WHILE
 %token T_FOR
+%token T_CONST
 
 %token <stringValue> T_TYPE
 %token <stringValue> T_IDENTIFIER
@@ -62,21 +62,24 @@
 
 %nterm <intValue> N_CONSTANT_VALUE
 
-%nterm <stringValue> N_SYMBOL_ACCESS
-%nterm <stringValue> N_NON_ARRAY_SYMBOL_ACCESS
-%nterm <stringValue> N_ARRAY_SYMBOL_ACCESS
+%nterm <pSymbol> N_SYMBOL_ACCESS
+%nterm <pSymbol> N_NON_ARRAY_SYMBOL_ACCESS
+%nterm <pSymbol> N_ARRAY_SYMBOL_ACCESS
 
-%nterm <stringValue> N_MEMBER_ACCESS
+%nterm <pSymbol> N_VARIABLE_ACCESS
 
-%nterm <pStringList> N_PARAMETER
-%nterm <pStringList> N_PARAMETER_LIST
+%nterm <pScope> M_CLASS_ACCESS_SCOPE_CHANGE
+%nterm <pScope> M_PARAMETER_LOOKUP_SCOPE_CHANGE
+
+%nterm <pSymbolList> N_PARAMETER
+%nterm <pSymbolList> N_PARAMETER_LIST
 
 %nterm <intValue> N_EXPRESSION
 
 %nterm <boolValue> N_BOOL_EXPRESSION
 
 %nterm <pScope> N_DECLARATION
-
+%nterm <pScope> N_BLOCK_SCOPE_DECLARATION
 %nterm <pScope> N_VARIABLE_DECLARATION
 
 %nterm <pArraytypePair> N_ARRAY_SUBSCRIPT
@@ -85,8 +88,8 @@
 %nterm <stringValue> M_BLOCK_BEGIN
 
 %nterm <pScope> N_FUNCTION_DECLARATION
-%nterm <pStringList> N_PARAMETER_DECLARATION
-%nterm <pStringList> N_PARAMETER_DECLARATION_LIST
+%nterm <pParamDeclarationList> N_PARAMETER_DECLARATION
+%nterm <pParamDeclarationList> N_PARAMETER_DECLARATION_LIST
 
 %nterm <pScope> N_BLOCK
 %nterm <stringValue> N_STATEMENT
@@ -113,16 +116,24 @@
 N_START:
     N_DECLARATION
     T_TYPE T_MAIN_IDENTIFIER '(' ')' N_BLOCK {
-        for ( auto e : * pGlobalScope->getSymbolTable()->getSymbols() ) {
-            std :: cout << e->getTypeName() << ' ' << e->getName() << '\n';
+        debugOut << "Scope: " << pCurrentScope << '\n' << "With variables:\n";
+        for ( auto e : * pCurrentScope->getSymbolTable()->getSymbols() ) {
+            debugOut << e->getTypeName() << ' ' << e->getName() << '\n';
         }
+        debugOut << "And types:\n";
+        for ( auto e : * pCurrentScope->getTypeTable()->getTypes() ) {
+            debugOut << e->getName() << ' ' << e->getLength() << '\n';
+        }
+        debugOut << '\n';
+        
+        std :: cout << "Error count: " << errorCount << '\n';
     }
 
 N_CONSTANT_VALUE:
     T_INT_NUMBER |
-    T_FLOAT_NUMBER { }|
-    T_CHAR_VALUE { }|
-    T_BOOL_VALUE { }|
+    T_FLOAT_NUMBER { } |
+    T_CHAR_VALUE { } |
+    T_BOOL_VALUE { } |
     T_STRING_VALUE { }
 
 N_SYMBOL_ACCESS:
@@ -130,19 +141,85 @@ N_SYMBOL_ACCESS:
     N_ARRAY_SYMBOL_ACCESS
 
 N_NON_ARRAY_SYMBOL_ACCESS:
-    N_SYMBOL_ACCESS '(' N_PARAMETER ')' |
-    T_IDENTIFIER
+    N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')' {
+        if ( pCurrentScope != nullptr ) {
+            auto pFunction = dynamic_cast < FunctionEntry * > ( $1 );
+            if ( pFunction == nullptr ) {
+                error :: nonFunctionCallError ( $1->getName() );
+            } else {
+                pFunction->matchParameterList ( $4 );
+            }
+        }
+        pCurrentScope = $2;
+    } |
+    T_IDENTIFIER {
+        if ( pCurrentScope != nullptr ) {
+            auto pSymbol = pCurrentScope->getSymbol ( $1 );
+            if ( pSymbol == nullptr ) {
+                $$ = new VariableEntry ( $1, nullptr );
+            } else {
+                $$ = pSymbol;
+            }
+        } else {
+            $$ = new VariableEntry ( $1, nullptr );
+        }
+    }
+
+M_PARAMETER_LOOKUP_SCOPE_CHANGE:
+    { $$ = pCurrentScope; pCurrentScope = pNonClassScope; }
 
 N_ARRAY_SYMBOL_ACCESS:
-    N_NON_ARRAY_SYMBOL_ACCESS N_ARRAY_SUBSCRIPT
+    N_NON_ARRAY_SYMBOL_ACCESS N_ARRAY_SUBSCRIPT {
+        auto pType = $1->getType();
+        if ( pType != nullptr ) {
+            if ( pType->getName()[0] != 'A' ) {
+                error :: nonArrayTypeArrayAccess ( $1->getName() );
+            } else {
+                if ( pType->matchArraySubscript ( $2 ) ) {
 
-N_MEMBER_ACCESS:
-    N_MEMBER_ACCESS '.' N_SYMBOL_ACCESS |
-    N_SYMBOL_ACCESS
+                }
+            }
+        } 
+        $$ = $1;
+    }
+
+N_VARIABLE_ACCESS:
+    N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE {
+        if ( $1->getType() != nullptr ) {
+            std :: string typeName = $1->getTypeName();
+            if ( typeName[0] < '0' || typeName[0] > '9' ) {
+                error :: nonStructureType ( typeName.c_str() );
+                pCurrentScope = nullptr;
+            } else {
+                pCurrentScope = ( reinterpret_cast < StructuredTypeEntry * > ( $1->getType() ) )->getScope();
+            }
+        } else {
+            pCurrentScope = nullptr;
+        }
+    } '.' N_SYMBOL_ACCESS { 
+        if ( pCurrentScope != nullptr ) {
+            if ( $5->getType() == nullptr ) {
+                error :: nonExistentMember ( $1->getTypeName().c_str(), $1->getName() );
+            }
+        } 
+        pCurrentScope = $2;
+        $$ = $5;
+    } |
+    N_SYMBOL_ACCESS {
+        if ( $1->getType() == nullptr ) {
+            error :: undeclaredSymbol ( $1->getName() );
+        }
+        $$ = $1;
+    }
+
+M_CLASS_ACCESS_SCOPE_CHANGE:
+    { $$ = pCurrentScope; }
 
 N_PARAMETER:
-    N_PARAMETER_LIST |
-    { $$ = new std :: list < char const * >; };
+    N_PARAMETER_LIST {
+        $$ = $1;
+    }|
+    { $$ = new IdentifierList; };
 
 N_PARAMETER_LIST:
     N_PARAMETER_LIST ',' N_SYMBOL_ACCESS {
@@ -150,8 +227,8 @@ N_PARAMETER_LIST:
         $$ = $1;
     } |
     N_SYMBOL_ACCESS {
-        $$ = new std :: list < char const * >;
-        $$->push_back( $1 );
+        $$ = new IdentifierList;
+        $$->push_back ( $1 );
     }
 
     
@@ -167,7 +244,7 @@ N_EXPRESSION:
     '(' N_EXPRESSION ')' {} |
     '-' N_EXPRESSION %prec UMINUS {} |
     N_CONSTANT_VALUE |
-    N_MEMBER_ACCESS { }
+    N_VARIABLE_ACCESS { }
 
 
 N_BOOL_EXPRESSION:
@@ -175,40 +252,55 @@ N_BOOL_EXPRESSION:
     N_BOOL_EXPRESSION T_BOR N_BOOL_EXPRESSION |
     '!' N_BOOL_EXPRESSION %prec UNOT { }| 
     N_CONSTANT_VALUE { } |
-    N_MEMBER_ACCESS { }
+    N_VARIABLE_ACCESS { }
     
 
 N_DECLARATION:
-    N_DECLARATION N_VARIABLE_DECLARATION ';'|
-    N_DECLARATION N_CLASS_DECLARATION ';' |
     N_DECLARATION N_FUNCTION_DECLARATION ';' |
-    N_DECLARATION error ';' |
+    N_DECLARATION  N_BLOCK_SCOPE_DECLARATION ';' |
+    N_DECLARATION error ';' { ++ errorCount; } |
     { };
+
+
+N_BLOCK_SCOPE_DECLARATION:
+    N_CLASS_DECLARATION |
+    N_VARIABLE_DECLARATION
+
 
 N_VARIABLE_DECLARATION:
     N_MIXED_TYPE T_IDENTIFIER {
         pCurrentScope->addVariable ( $1, $2 );
     } |
+    N_MIXED_TYPE T_CONST T_IDENTIFIER {
+        std :: string constType = std :: string ( $1 ) + "$const";
+        pCurrentScope->addVariable ( constType.c_str(), $3 );
+    } |
     N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT {
         pCurrentScope->addArrayVariable ( $1, $2, $3->first, $3->second );
-    } 
+    } |
+    N_MIXED_TYPE T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT {
+        std :: string constType = std :: string ( $1 ) + "$const";
+        pCurrentScope->addArrayVariable ( constType.c_str(), $3, $4->first, $4->second );
+    }
+
 
 N_ARRAY_SUBSCRIPT:
     '[' T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT {
         char * pAux = new char;
         sprintf ( pAux, "A%d_", $2 );
         strcat ( pAux, $4->first );
-        $$ = new std :: pair < char *, Scope :: TypeLength >;
+        $$ = new ArraytypePair;
         $$->first = pAux;
         $$->second = $4->second * $2;
         delete $4;
     } |
     '[' T_INT_NUMBER ']' { 
-        $$ = new std :: pair < char *, Scope :: TypeLength >;
+        $$ = new ArraytypePair;
         $$->first = new char;
         sprintf ( $$->first, "A%d_", $2 );
         $$->second = $2;
     };
+
 
 N_CLASS_DECLARATION:
     T_CLASS T_IDENTIFIER '{' 
@@ -223,31 +315,48 @@ N_CLASS_DECLARATION:
         }
     } 
 
+
 M_BLOCK_BEGIN: { 
-        auto newScope = new Scope ( pCurrentScope, pGlobalScope );
-        pCurrentScope = newScope; 
+        auto newScope = new Scope ( pCurrentScope );
+        pCurrentScope = pNonClassScope = newScope; 
     }
+
 
 N_FUNCTION_DECLARATION: 
     N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' {
-        pCurrentScope->addFunction ( $2, $1, nullptr, $4 );
+        pCurrentScope->addFunction ( $2, $1, nullptr, $4, nullptr );
     }
 
 N_PARAMETER_DECLARATION:
     N_PARAMETER_DECLARATION_LIST |
-    { $$ = new std :: list < char const * >; };
+    { $$ = new ParameterDeclarationList; };
+
 
 N_PARAMETER_DECLARATION_LIST:
     N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE T_IDENTIFIER {
-        $1->push_back ( $3 );
+        $1->push_back ( new ParameterDeclarationPair { $3, $4 } );
         $$ = $1;
     } |
     N_MIXED_TYPE T_IDENTIFIER {
-        $$ = new std :: list < char const * >;
-        $$->push_back( $1 );
+        $$ = new ParameterDeclarationList;
+        $$->push_back( new ParameterDeclarationPair { $1, $2 } );
     }
 
-N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}' { }
+
+N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}' {
+        $$ = pCurrentScope;
+        debugOut << "Scope: " << pCurrentScope << '\n' << "With variables:\n";
+        for ( auto e : * pCurrentScope->getSymbolTable()->getSymbols() ) {
+            debugOut << e->getTypeName() << ' ' << e->getName() << '\n';
+        }
+        debugOut << "And types:\n";
+        for ( auto e : * pCurrentScope->getTypeTable()->getTypes() ) {
+            debugOut << e->getName() << ' ' << e->getLength() << '\n';
+        }
+        debugOut << '\n';
+        pCurrentScope = pCurrentScope->getUpperScope();
+    }
+
 
 N_STATEMENT:
     N_STATEMENT N_ASSIGNMENT ';' |
@@ -255,17 +364,25 @@ N_STATEMENT:
     N_STATEMENT N_WHILE_STATEMENT |
     N_STATEMENT N_FOR_STATEMENT |
     N_STATEMENT N_EXPRESSION ';' |
+    N_STATEMENT N_BLOCK_SCOPE_DECLARATION ';' { } |
+    N_STATEMENT error ';' { ++ errorCount; }|
+    N_STATEMENT N_BLOCK |
     { };
 
+
 N_ASSIGNMENT:
-    T_IDENTIFIER '=' N_EXPRESSION { } 
+    N_VARIABLE_ACCESS '=' N_EXPRESSION { } 
+
 
 N_IF_STATEMENT:
     T_IF '(' N_BOOL_EXPRESSION ')' N_BLOCK { }
 
+
 N_WHILE_STATEMENT:
     T_WHILE '(' N_BOOL_EXPRESSION ')' N_BLOCK { }
 
+
 N_FOR_STATEMENT:
     T_FOR '(' ',' ',' ')' N_BLOCK { }
+
 %%

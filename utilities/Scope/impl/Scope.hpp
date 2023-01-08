@@ -1,13 +1,25 @@
 #ifndef __SCOPE_IMPL_HPP__
 #define __SCOPE_IMPL_HPP__
 
+Scope * Scope :: pGlobalScope = new Scope ( 
+            nullptr,
+            new TypeTable (
+                new TypeTable :: TypeList {
+                    new TypeEntry ( "nonExistentType", 0 ),
+                    new TypeEntry ( "char", 1 ),
+                    new TypeEntry ( "bool", 1 ),
+                    new TypeEntry ( "float", 4 ),
+                    new TypeEntry ( "int", 4 ),
+                    new TypeEntry ( "string", 8 )
+                }
+            )
+    );
+
 Scope :: Scope ( 
     Scope     * pUpperScope,
-    Scope     * pGlobalScope, 
     TypeTable * pTypes      
 ) :
-    _pUpperScope  ( pUpperScope ),
-    _pGlobalScope ( pGlobalScope ) {
+    _pUpperScope  ( pUpperScope ) {
 
     if ( pTypes != nullptr ) {
         for ( auto e : * pTypes->getTypes() ) {
@@ -47,9 +59,10 @@ auto Scope :: _typeExistenceCheck (
 ) -> TypeEntry * {
 
     auto pType = this->_pTypes->getType ( pTypeName );
-    if ( pType == nullptr && this->_pGlobalScope != nullptr ) { 
-
-        pType = this->_pGlobalScope->getTypeTable()->getType ( pTypeName );
+    if ( pType == nullptr ) { 
+        if ( this->_pUpperScope != nullptr ) {
+            pType = this->_pUpperScope->_typeExistenceCheck ( pTypeName );
+        }
     }
     return pType;
 }
@@ -62,13 +75,13 @@ auto Scope :: addVariable (
 
     auto pType = this->_typeExistenceCheck ( pSymbolType );
     if ( pType == nullptr ) {
-        error :: undefinedTypeError ( pSymbolType );
+        error :: undefinedType ( pSymbolType );
         return;
     }
 
     auto symbolEntry = this->_pSymbols->lookUpSymbol ( pSymbolName );
     if ( symbolEntry != nullptr ) {
-        error :: variableAddingError ( pSymbolName, symbolEntry );
+        error :: variableRedeclaration ( pSymbolName, symbolEntry );
         return;
     }
 
@@ -90,11 +103,17 @@ auto Scope :: addArrayVariable (
 
     auto symbolEntry = this->_pSymbols->lookUpSymbol ( pSymbolName );
     if ( symbolEntry != nullptr ) {
-        error :: variableAddingError ( pSymbolName, symbolEntry );
+        error :: variableRedeclaration ( pSymbolName, symbolEntry );
         return;
     }
 
-    std :: string arrayComposedType = std :: string ( pArrayType ) + pBaseType;
+    auto pType = this->_typeExistenceCheck ( pBaseType );
+    if ( pType == nullptr ) {
+        error :: undefinedType ( pBaseType );
+        return;
+    }
+
+    std :: string arrayComposedType = std :: string ( pArrayType ) + pType->getName();
     auto pExistentType = this->_typeExistenceCheck ( arrayComposedType.c_str() );
     if ( pExistentType != nullptr ) {
         this->_pSymbols->addSymbol (
@@ -103,12 +122,6 @@ auto Scope :: addArrayVariable (
                 pExistentType
             )
         );
-        return;
-    }
-
-    auto pType = this->_typeExistenceCheck ( pBaseType );
-    if ( pType == nullptr ) {
-        error :: undefinedTypeError ( pBaseType );
         return;
     }
 
@@ -127,29 +140,30 @@ auto Scope :: addFunction (
     char const                   * pFunctionName,
     char const                   * pReturnTypeName,
     TreeNodeIdentifier           * pFunctionBody,
-    std :: list < char const * > * pParameterListTypes
+    ParameterDeclarationList     * pParameterListTypes,
+    Scope                        * pScope
 ) -> void {
 
     auto pReturnType = this->_typeExistenceCheck ( pReturnTypeName );
     if ( pReturnType == nullptr ) {
-        error :: undefinedTypeError ( pReturnTypeName );
+        error :: undefinedType ( pReturnTypeName );
         return;
     }
 
     auto symbolEntry = this->_pSymbols->lookUpSymbol ( pFunctionName );
     if ( symbolEntry != nullptr ) {
-        error :: functionAddingError ( pFunctionName, symbolEntry );
+        error :: functionRedeclaration ( pFunctionName, symbolEntry );
         return;
     }
 
     auto pParameters = new ParameterList;
     for ( auto e : * pParameterListTypes ) {
-        auto pType = this->_typeExistenceCheck ( e );
+        auto pType = this->_typeExistenceCheck ( e->first );
         if ( pType == nullptr ) {
-            error :: undefinedTypeError ( e );
-            pType = this->_pGlobalScope->getTypeTable()->getTypes()->front();
+            error :: undefinedType ( e->first );
+            pType = pGlobalScope->getTypeTable()->getTypes()->front();
         }
-        pParameters->push_back ( pType );
+        pParameters->push_back ( new FunctionEntry :: ParameterPair ( pType, e->second ) );
     }
 
     this->_pSymbols->addSymbol ( 
@@ -157,7 +171,8 @@ auto Scope :: addFunction (
                 pFunctionName,
                 pReturnType,
                 pFunctionBody,
-                pParameters
+                pParameters,
+                pScope
             )
         );
 }
@@ -171,7 +186,7 @@ auto Scope :: addUserDefinedType (
 
     auto pTypeEntry = this->_pTypes->getType ( pTypeName );
     if ( pTypeEntry != nullptr ) {
-        error :: redefinedTypeError ( pTypeName );
+        error :: redefinedType ( pTypeName );
         return nullptr;
     }
 
@@ -196,5 +211,19 @@ auto Scope :: setUserDefinedTypeLength (
     }
 
     this->_pTypes->setTypeLength ( pTypeEntry, typeLength == 0 ? 1 : typeLength );
+}
+
+
+auto Scope :: getSymbol (
+    char const * pSymbolName
+) -> SymbolEntry * {
+
+    SymbolEntry * pSymbol = this->_pSymbols->lookUpSymbol ( pSymbolName );
+    if ( pSymbol == nullptr ) {
+        if ( this->_pUpperScope != nullptr ) {
+            pSymbol = this->_pUpperScope->getSymbol ( pSymbolName );
+        }
+    }
+    return pSymbol;
 }
 #endif //__SCOPE_IMPL_HPP__
