@@ -79,7 +79,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 27 "compiler.ypp"
+#line 28 "compiler.ypp"
 
     int intValue;
     float floatValue;
@@ -92,7 +92,7 @@ union YYSTYPE
     ParameterDeclarationList * pParamDeclarationList;
     StringList * pStringList;
     ArraytypePair * pArraytypePair;
-    SymbolEntry * pSymbol;
+    IdentifierLookup * pIdentifierLookup;
     IdentifierList * pSymbolList;
 #endif
 

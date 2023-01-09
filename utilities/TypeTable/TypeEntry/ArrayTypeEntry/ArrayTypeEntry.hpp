@@ -9,13 +9,13 @@ public:
     using TypeEntry :: TypeLength;
 
 private:
-    TypeEntry * _pAliasedType;
+    TypeEntry * _pBaseType;
 
 public:
     ArrayTypeEntry (
         char const * pName,
         TypeLength   length,
-        TypeEntry  * pAliasedType
+        TypeEntry  * pBaseType
     );
 };
 

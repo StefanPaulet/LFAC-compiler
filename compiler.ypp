@@ -22,6 +22,7 @@
     using ParameterDeclarationList = Scope :: ParameterDeclarationList;
     using IdentifierAccessPair     = std :: pair < char const *, SymbolEntry * >;
     using IdentifierList           = std :: list < SymbolEntry * >;
+    using IdentifierLookup         = std :: pair < bool, SymbolEntry * >;
 %}
 
 %union {
@@ -36,7 +37,7 @@
     ParameterDeclarationList * pParamDeclarationList;
     StringList * pStringList;
     ArraytypePair * pArraytypePair;
-    SymbolEntry * pSymbol;
+    IdentifierLookup * pIdentifierLookup;
     IdentifierList * pSymbolList;
 #endif
 }
@@ -62,11 +63,11 @@
 
 %nterm <intValue> N_CONSTANT_VALUE
 
-%nterm <pSymbol> N_SYMBOL_ACCESS
-%nterm <pSymbol> N_NON_ARRAY_SYMBOL_ACCESS
-%nterm <pSymbol> N_ARRAY_SYMBOL_ACCESS
+%nterm <pIdentifierLookup> N_SYMBOL_ACCESS
+%nterm <pIdentifierLookup> N_NON_ARRAY_SYMBOL_ACCESS
+%nterm <pIdentifierLookup> N_ARRAY_SYMBOL_ACCESS
 
-%nterm <pSymbol> N_VARIABLE_ACCESS
+%nterm <pIdentifierLookup> N_VARIABLE_ACCESS
 
 %nterm <pScope> M_CLASS_ACCESS_SCOPE_CHANGE
 %nterm <pScope> M_PARAMETER_LOOKUP_SCOPE_CHANGE
@@ -81,6 +82,8 @@
 %nterm <pScope> N_DECLARATION
 %nterm <pScope> N_BLOCK_SCOPE_DECLARATION
 %nterm <pScope> N_VARIABLE_DECLARATION
+%nterm <pScope> N_VARIABLE_DEFINITION
+%nterm <pScope> N_DECLARATION_LIST
 
 %nterm <pArraytypePair> N_ARRAY_SUBSCRIPT
 
@@ -142,26 +145,36 @@ N_SYMBOL_ACCESS:
 
 N_NON_ARRAY_SYMBOL_ACCESS:
     N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')' {
+
         if ( pCurrentScope != nullptr ) {
-            auto pFunction = dynamic_cast < FunctionEntry * > ( $1 );
-            if ( pFunction == nullptr ) {
-                error :: nonFunctionCallError ( $1->getName() );
-            } else {
-                pFunction->matchParameterList ( $4 );
+            if ( ! $1->first && $1->second->getType() != nullptr ) {
+                auto pFunction = dynamic_cast < FunctionEntry * > ( $1->second );
+                if ( pFunction == nullptr ) {
+                    $1->first = true;
+                    error :: nonFunctionCallError ( $1->second->getName() );
+                } else {
+                    if ( pFunction->matchParameterList ( $4 ) ) {
+                        $1->second = pFunction->getScope()->getSymbolTable()->lookUpSymbol ( "$return" );
+                    } else {
+                        $1->first = true;
+                    }
+                }
             }
         }
+        $$ = $1;
         pCurrentScope = $2;
     } |
     T_IDENTIFIER {
+
         if ( pCurrentScope != nullptr ) {
             auto pSymbol = pCurrentScope->getSymbol ( $1 );
             if ( pSymbol == nullptr ) {
-                $$ = new VariableEntry ( $1, nullptr );
+                $$ = new IdentifierLookup ( false, new VariableEntry ( $1, nullptr ) );
             } else {
-                $$ = pSymbol;
+                $$ = new IdentifierLookup ( false, pSymbol );
             }
         } else {
-            $$ = new VariableEntry ( $1, nullptr );
+            $$ = new IdentifierLookup ( false, new VariableEntry ( $1, nullptr ) );
         }
     }
 
@@ -170,44 +183,56 @@ M_PARAMETER_LOOKUP_SCOPE_CHANGE:
 
 N_ARRAY_SYMBOL_ACCESS:
     N_NON_ARRAY_SYMBOL_ACCESS N_ARRAY_SUBSCRIPT {
-        auto pType = $1->getType();
-        if ( pType != nullptr ) {
-            if ( pType->getName()[0] != 'A' ) {
-                error :: nonArrayTypeArrayAccess ( $1->getName() );
-            } else {
-                if ( pType->matchArraySubscript ( $2 ) ) {
 
+        if ( ! $1->first ) {
+            auto pType = $1->second->getType();
+            if ( pType != nullptr ) {
+                if ( pType->getName()[0] != 'A' ) {
+                    $1->first = true;
+                    error :: nonArrayTypeArrayAccess ( $1->second->getName() );
+                } else {
+                    if ( pType->matchArraySubscript ( $2 ) ) {
+                        $1->second = ( reinterpret_cast < VariableEntry * > ( $1->second ) )->getValue().arrayValue[ $2->second ];
+                    } else {
+                        $1->first = true;
+                    }
                 }
             }
-        } 
+        }
         $$ = $1;
     }
 
 N_VARIABLE_ACCESS:
     N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE {
-        if ( $1->getType() != nullptr ) {
-            std :: string typeName = $1->getTypeName();
+        if ( ! $1->first ) {
+            std :: string typeName = $1->second->getTypeName();
             if ( typeName[0] < '0' || typeName[0] > '9' ) {
                 error :: nonStructureType ( typeName.c_str() );
+                $1->first = true;
                 pCurrentScope = nullptr;
             } else {
-                pCurrentScope = ( reinterpret_cast < StructuredTypeEntry * > ( $1->getType() ) )->getScope();
+                pCurrentScope = ( reinterpret_cast < StructuredTypeEntry * > ( $1->second->getType() ) )->getScope();
             }
         } else {
             pCurrentScope = nullptr;
         }
+        delete $1;
     } '.' N_SYMBOL_ACCESS { 
         if ( pCurrentScope != nullptr ) {
-            if ( $5->getType() == nullptr ) {
-                error :: nonExistentMember ( $1->getTypeName().c_str(), $1->getName() );
+            if ( $5->second == nullptr ) {
+                $5->first = true;
+                error :: nonExistentMember ( $1->second->getTypeName().c_str(), $5->second->getName() );
             }
         } 
         pCurrentScope = $2;
         $$ = $5;
     } |
     N_SYMBOL_ACCESS {
-        if ( $1->getType() == nullptr ) {
-            error :: undeclaredSymbol ( $1->getName() );
+        if ( ! $1->first ) {
+            if ( $1->second->getType() == nullptr ) {
+                $1->first = true;
+                error :: undeclaredSymbol ( $1->second->getName() );
+            }
         }
         $$ = $1;
     }
@@ -223,12 +248,12 @@ N_PARAMETER:
 
 N_PARAMETER_LIST:
     N_PARAMETER_LIST ',' N_SYMBOL_ACCESS {
-        $1->push_back ( $3 );
+        $1->push_back ( $3->second );
         $$ = $1;
     } |
     N_SYMBOL_ACCESS {
         $$ = new IdentifierList;
-        $$->push_back ( $1 );
+        $$->push_back ( $1->second );
     }
 
     
@@ -272,17 +297,18 @@ N_VARIABLE_DECLARATION:
         pCurrentScope->addVariable ( $1, $2 );
     } |
     N_MIXED_TYPE T_CONST T_IDENTIFIER {
-        std :: string constType = std :: string ( $1 ) + "$const";
-        pCurrentScope->addVariable ( constType.c_str(), $3 );
+        error :: unitializedConstIdentifier();
     } |
     N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT {
         pCurrentScope->addArrayVariable ( $1, $2, $3->first, $3->second );
     } |
     N_MIXED_TYPE T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT {
-        std :: string constType = std :: string ( $1 ) + "$const";
-        pCurrentScope->addArrayVariable ( constType.c_str(), $3, $4->first, $4->second );
+        error :: unitializedConstIdentifier();
     }
 
+N_DECLARATION_LIST:
+    N_DECLARATION_LIST ',' T_IDENTIFIER |
+    T_IDENTIFIER
 
 N_ARRAY_SUBSCRIPT:
     '[' T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT {
@@ -292,7 +318,6 @@ N_ARRAY_SUBSCRIPT:
         $$ = new ArraytypePair;
         $$->first = pAux;
         $$->second = $4->second * $2;
-        delete $4;
     } |
     '[' T_INT_NUMBER ']' { 
         $$ = new ArraytypePair;
@@ -323,8 +348,12 @@ M_BLOCK_BEGIN: {
 
 
 N_FUNCTION_DECLARATION: 
+    N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' N_BLOCK {
+        pCurrentScope->addFunction ( $2, $1, nullptr, $4, $6 );
+        $6->addVariable ( $1, "$return" );
+    } |
     N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' {
-        pCurrentScope->addFunction ( $2, $1, nullptr, $4, nullptr );
+        error :: functionDeclaration();
     }
 
 N_PARAMETER_DECLARATION:

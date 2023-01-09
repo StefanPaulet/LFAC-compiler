@@ -2,7 +2,7 @@
 #define __FUNCTION_ENTRY_HPP__
 
 #include "../SymbolEntry.hpp"
-#include "../../../AbstractSyntaxTree/TreeNodeIdentifier.hpp"
+#include "../../../AbstractSyntaxTree/TreeNode/TreeNodeIdentifier.hpp"
 #include <list>
 #include <utility>
 #include <stdio.h>
@@ -47,6 +47,9 @@ public:
     auto matchParameterList (
         std :: list < SymbolEntry * > * pParameterList
     ) -> bool;
+
+
+    constexpr auto getScope () const -> Scope *;
 };
 
 #endif //__FUNCTION_ENTRY_HPP__

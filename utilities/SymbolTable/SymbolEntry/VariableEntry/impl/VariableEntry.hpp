@@ -42,4 +42,17 @@ constexpr auto VariableEntry :: getType () const -> TypeEntry * {
     return this->_pType;
 }
 
+
+auto VariableEntry :: getValue () -> VarValue & {
+
+    return this->_val;
+}
+
+
+auto VariableEntry :: setValue (
+    VarValue val
+) -> void {
+
+    this->_val = val;
+}
 #endif //__VARIABLE_ENTRY_IMPL_HPP__

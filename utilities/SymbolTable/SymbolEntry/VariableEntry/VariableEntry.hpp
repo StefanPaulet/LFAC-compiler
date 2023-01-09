@@ -16,12 +16,7 @@ public:
         char *  stringValue;
         Scope * structValue;
 
-        bool   * boolArrayValue;
-        char   * charArrayValue;
-        float  * floatArrayValue;
-        int    * intArrayValue;
-        char  ** stringArrayValue;
-        Scope ** structArrayValue;
+        VariableEntry ** arrayValue;
 
         VarValue () = default;
         VarValue ( bool val ) : boolValue ( val ) { }
@@ -29,13 +24,15 @@ public:
         VarValue ( float val ) : floatValue ( val ) { }
         VarValue ( int val ) : intValue ( val ) { }
         VarValue ( char * pVal ) : stringValue ( strdup ( pVal ) ) { }
-        
+        VarValue ( VariableEntry ** pVal ) : arrayValue ( pVal ) { }
     };
     
 private:
     TypeEntry * _pType;
 
     VarValue _val;
+
+    bool _constQualified;
 
 public:
     VariableEntry ( 
@@ -57,6 +54,14 @@ public:
 
 
     constexpr auto getType () const -> TypeEntry * override;
+
+
+    auto getValue () -> VarValue &;
+
+
+    auto setValue ( 
+        VarValue val
+    ) -> void;
 };
 
 #endif //__VARIABLE_ENTRY_HPP__

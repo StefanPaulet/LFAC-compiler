@@ -95,7 +95,12 @@ namespace error {
     ) -> void {
 
         ++ errorCount;
-        std :: string errorMsg = "Identifier " + std :: string ( pSymbolName ) + " does not name a function";
+        std :: string errorMsg;
+        if ( ! strcmp ( pSymbolName, "$return" ) ) {
+            errorMsg = "Return type of function does not name a function";    
+        } else {
+            errorMsg = "Identifier " + std :: string ( pSymbolName ) + " does not name a function";
+        }
         yyerror ( errorMsg.c_str() );
     }
 
@@ -147,6 +152,22 @@ namespace error {
         ++ errorCount;
         std :: string errorMsg = "No matching function to call: parameter number " + std :: to_string ( parameterCount ) +
                                 " has type " + pParameterType + " while calling argument has type " + pCallerType;
+        yyerror ( errorMsg.c_str() );
+    }
+
+
+    auto unitializedConstIdentifier () -> void {
+    
+        ++ errorCount;
+        std :: string errorMsg = "Const identifier must be initialized";
+        yyerror ( errorMsg.c_str() );
+    }
+
+
+    auto functionDeclaration () -> void {
+
+        ++ errorCount;
+        std :: string errorMsg = "Operation not supported: Function declaration without definition";
         yyerror ( errorMsg.c_str() );
     }
 }

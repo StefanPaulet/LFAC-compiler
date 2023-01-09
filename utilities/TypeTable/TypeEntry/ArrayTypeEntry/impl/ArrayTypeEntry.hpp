@@ -4,10 +4,10 @@
 ArrayTypeEntry :: ArrayTypeEntry (
     char const * pName,
     TypeLength   length,
-    TypeEntry  * pAliasedType
+    TypeEntry  * pBaseType
 ) : 
-    TypeEntry     ( pName, length ),
-    _pAliasedType ( pAliasedType ) {
+    TypeEntry   ( pName, length ),
+    _pBaseType  ( pBaseType ) {
         
     }
 

@@ -1,33 +1,21 @@
 int const a;
 float const b;
-int const d[3][5];
 class A {
     int a;
 };
-
 class B {
-    int b;
+    int b[2];
     float c;
-    int g ( int a, float d );
+    int g ( int a, float d ) { };
     A d;
 };
 B c;
-int x[5][2][4];
-int y[2][4];
-int func();
-int funcg(B d, A c, int x );
+int func() { };
 int main() { 
-    float d;
-    funcg(c, dsfa, a);
-    x;
-    c.d.a;
-    c.d.a;
     func();
-    c.g(a,d).a;
-    a = b;
     
     B a[2][4];
-    a[2][4].f;
+    a[1][3].f;
     class C {
         float a;
         float b;
@@ -37,17 +25,18 @@ int main() {
 
     };
     C d;
-    B X;
+    B x;
     {
         int a;
     }
     if ( 2 ) {
         x = 5;
     }
-    x[2];
+    dsa.fdsa;
     x;
-    func()[2];
+    x;
     x()[2]();
     x(x[2]);
-    func()()[2]()[3];
+    func().a;
+    func()()[2];
 }

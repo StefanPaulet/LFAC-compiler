@@ -114,25 +114,24 @@ auto Scope :: addArrayVariable (
     }
 
     std :: string arrayComposedType = std :: string ( pArrayType ) + pType->getName();
-    auto pExistentType = this->_typeExistenceCheck ( arrayComposedType.c_str() );
-    if ( pExistentType != nullptr ) {
-        this->_pSymbols->addSymbol (
-            new VariableEntry (
-                pSymbolName,
-                pExistentType
-            )
-        );
-        return;
-    }
+    auto pNewArrayType = this->_typeExistenceCheck ( arrayComposedType.c_str() );
+    if ( pNewArrayType == nullptr ) {
 
-    ArrayTypeEntry * pNewArrayType = new ArrayTypeEntry ( arrayComposedType.c_str(), arraySize * pType->getLength(), pType );
-    this->_pTypes->addType ( pNewArrayType );
-    this->_pSymbols->addSymbol (
-        new VariableEntry (
+        pNewArrayType = new ArrayTypeEntry ( arrayComposedType.c_str(), arraySize * pType->getLength(), pType );
+        this->_pTypes->addType ( pNewArrayType );
+    }
+    
+    auto pNewEntry = new VariableEntry (
             pSymbolName,
             pNewArrayType
-        )
-    );
+        );
+
+    auto arrayValues = new VariableEntry * [ arraySize ];
+    for ( auto i = 0; i < arraySize; ++ i ) {
+        arrayValues[ i ] = new VariableEntry ( std :: to_string ( i ).c_str(), pType ); 
+    }
+    pNewEntry->setValue ( arrayValues );
+    this->_pSymbols->addSymbol ( pNewEntry );
 }
 
 

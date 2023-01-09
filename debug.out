@@ -1,29 +1,34 @@
-Scope: 0x562c167fa8c0
+Scope: 0x563fb8accf00
+With variables:
+And types:
+
+Scope: 0x563fb8acd3b0
+With variables:
+And types:
+
+Scope: 0x563fb8ace360
 With variables:
 int a
 And types:
 
-Scope: 0x562c167faa10
+Scope: 0x563fb8ace4b0
 With variables:
 And types:
 
-Scope: 0x562c167f99d0
+Scope: 0x563fb8acd5a0
 With variables:
-float d
 A2_A4_1B a
-1B X
+1C d
+1B x
 And types:
-A2_A4_1B 96
+A2_A4_1B 128
 1C 16
 1A 1
 
-Scope: 0x562c167f1210
+Scope: 0x563fb8ac5210
 With variables:
 1B c
-A5_A2_A4_int x
-A2_A4_int y
 int() func
-int(1B,1A,int) funcg
 And types:
 nonExistentType 0
 char 1
@@ -32,7 +37,5 @@ float 4
 int 4
 string 8
 1A 4
-1B 12
-A5_A2_A4_int 160
-A2_A4_int 32
+1B 16
 

@@ -30,6 +30,8 @@ protected:
 
     TreeNode * * _pChildList { nullptr };
 
+    TreeNode * _pParent { nullptr };
+
 public:
     TreeNode () = default;
 

@@ -84,4 +84,10 @@ auto FunctionEntry :: matchParameterList (
     return true;
 }
 
+
+constexpr auto FunctionEntry :: getScope () const -> Scope * {
+    
+    return this->_pScope;
+}
+
 #endif //__FUNCTION_ENTRY_IMPL_HPP__
