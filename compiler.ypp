@@ -10,6 +10,9 @@
     #include "../utilities/Scope/Scope.hpp"
     #include "../utilities/Scope/impl/Scope.hpp"
 
+    #include "../utilities/AbstractSyntaxTree/AbstractSyntaxTree.hpp"
+    #include "../utilities/AbstractSyntaxTree/impl/AbstractSyntaxTree.hpp"
+
     Scope * pCurrentScope = Scope :: pGlobalScope;
     Scope * pNonClassScope;
     std :: ofstream debugOut ( "debug.out" );
@@ -21,8 +24,10 @@
     using ParameterDeclarationPair = Scope :: ParameterDeclarationPair;
     using ParameterDeclarationList = Scope :: ParameterDeclarationList;
     using IdentifierAccessPair     = std :: pair < char const *, SymbolEntry * >;
-    using IdentifierList           = std :: list < SymbolEntry * >;
-    using IdentifierLookup         = std :: pair < bool, SymbolEntry * >;
+    using ParameterCallList        = FunctionEntry :: ParameterCallList;
+    using IdentifierLookup         = std :: pair < bool, TreeNodeIdentifier * >;
+    using TreeNodeLabels           = AbstractSyntaxTree :: ASTOperators;
+    using BlockType                = std :: pair < Scope *, TreeNode * >;
 %}
 
 %union {
@@ -38,7 +43,9 @@
     StringList * pStringList;
     ArraytypePair * pArraytypePair;
     IdentifierLookup * pIdentifierLookup;
-    IdentifierList * pSymbolList;
+    ParameterCallList * pParameterCallList;
+    TreeNode * pTreeNode;
+    BlockType * pBlock;
 #endif
 }
     
@@ -61,7 +68,7 @@
 
 %nterm <stringValue> N_MIXED_TYPE
 
-%nterm <intValue> N_CONSTANT_VALUE
+%nterm <pTreeNode> N_CONSTANT_VALUE
 
 %nterm <pIdentifierLookup> N_SYMBOL_ACCESS
 %nterm <pIdentifierLookup> N_NON_ARRAY_SYMBOL_ACCESS
@@ -72,35 +79,33 @@
 %nterm <pScope> M_CLASS_ACCESS_SCOPE_CHANGE
 %nterm <pScope> M_PARAMETER_LOOKUP_SCOPE_CHANGE
 
-%nterm <pSymbolList> N_PARAMETER
-%nterm <pSymbolList> N_PARAMETER_LIST
+%nterm <pParameterCallList> N_PARAMETER
+%nterm <pParameterCallList> N_PARAMETER_LIST
 
-%nterm <intValue> N_EXPRESSION
+%nterm <pTreeNode> N_EXPRESSION
 
-%nterm <boolValue> N_BOOL_EXPRESSION
+%nterm <pTreeNode> N_BOOL_EXPRESSION
 
-%nterm <pScope> N_DECLARATION
-%nterm <pScope> N_BLOCK_SCOPE_DECLARATION
-%nterm <pScope> N_VARIABLE_DECLARATION
-%nterm <pScope> N_VARIABLE_DEFINITION
-%nterm <pScope> N_DECLARATION_LIST
+%nterm <pTreeNode> N_DECLARATION
+%nterm <pTreeNode> N_BLOCK_SCOPE_DECLARATION
+%nterm <pTreeNode> N_VARIABLE_DECLARATION
 
 %nterm <pArraytypePair> N_ARRAY_SUBSCRIPT
 
-%nterm <pScope> N_CLASS_DECLARATION
-%nterm <stringValue> M_BLOCK_BEGIN
+%nterm <pTreeNode> N_CLASS_DECLARATION
+%nterm <pTreeNode> M_BLOCK_BEGIN
 
-%nterm <pScope> N_FUNCTION_DECLARATION
+%nterm <pTreeNode> N_FUNCTION_DECLARATION
 %nterm <pParamDeclarationList> N_PARAMETER_DECLARATION
 %nterm <pParamDeclarationList> N_PARAMETER_DECLARATION_LIST
 
-%nterm <pScope> N_BLOCK
-%nterm <stringValue> N_STATEMENT
+%nterm <pBlock> N_BLOCK
+%nterm <pTreeNode> N_STATEMENT
 
-%nterm <stringValue> N_ASSIGNMENT
-%nterm <stringValue> N_IF_STATEMENT
-%nterm <stringValue> N_WHILE_STATEMENT
-%nterm <stringValue> N_FOR_STATEMENT
+%nterm <pTreeNode> N_ASSIGNMENT
+%nterm <pTreeNode> N_IF_STATEMENT
+%nterm <pTreeNode> N_WHILE_STATEMENT
+%nterm <pTreeNode> N_FOR_STATEMENT
 
 %left T_BAND
 %left T_BOR
@@ -133,11 +138,21 @@ N_START:
     }
 
 N_CONSTANT_VALUE:
-    T_INT_NUMBER |
-    T_FLOAT_NUMBER { } |
-    T_CHAR_VALUE { } |
-    T_BOOL_VALUE { } |
-    T_STRING_VALUE { }
+    T_INT_NUMBER {
+        $$ = new TreeNodeConstant ( TreeNodeConstant :: ConstType :: __INT, $1 );
+    } |
+    T_FLOAT_NUMBER { 
+        $$ = new TreeNodeConstant ( TreeNodeConstant :: ConstType :: __FLOAT, $1 );
+    } |
+    T_CHAR_VALUE { 
+        $$ = new TreeNodeConstant ( TreeNodeConstant :: ConstType :: __CHAR, $1 );
+    } |
+    T_BOOL_VALUE { 
+        $$ = new TreeNodeConstant ( TreeNodeConstant :: ConstType :: __BOOL, $1 );
+    } |
+    T_STRING_VALUE { 
+        $$ = new TreeNodeConstant ( TreeNodeConstant :: ConstType :: __STRING, $1 );
+    }
 
 N_SYMBOL_ACCESS:
     N_NON_ARRAY_SYMBOL_ACCESS |
@@ -147,14 +162,22 @@ N_NON_ARRAY_SYMBOL_ACCESS:
     N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')' {
 
         if ( pCurrentScope != nullptr ) {
-            if ( ! $1->first && $1->second->getType() != nullptr ) {
-                auto pFunction = dynamic_cast < FunctionEntry * > ( $1->second );
+            if ( ! $1->first && $1->second->getSymbol()->getType() != nullptr ) {
+                auto pFunction = dynamic_cast < FunctionEntry * > ( $1->second->getSymbol() );
                 if ( pFunction == nullptr ) {
                     $1->first = true;
-                    error :: nonFunctionCallError ( $1->second->getName() );
+                    error :: nonFunctionCallError ( $1->second->getSymbol()->getName() );
                 } else {
-                    if ( pFunction->matchParameterList ( $4 ) ) {
-                        $1->second = pFunction->getScope()->getSymbolTable()->lookUpSymbol ( "$return" );
+                    if ( pFunction->matchParameterCallList ( $4 ) ) {
+                        $1->second->setLabel ( TreeNodeLabels :: __CALL );
+                        TreeNode * * pFunctionChildList = new TreeNode * [ $4->size() + 1 ];
+                        unsigned short int i = 0;
+                        pFunctionChildList [ i++ ] = new TreeNodeIdentifier ( TreeNodeLabels :: __VAR, pFunction );
+                        for ( auto e : * $4 ) {
+                            pFunctionChildList [ i++ ] = e;
+                        }
+                        $1->second->setChildList ( pFunctionChildList );
+                        $1->second->setSymbol ( pFunction->getScope()->getSymbolTable()->lookUpSymbol("$return" ) );
                     } else {
                         $1->first = true;
                     }
@@ -169,12 +192,30 @@ N_NON_ARRAY_SYMBOL_ACCESS:
         if ( pCurrentScope != nullptr ) {
             auto pSymbol = pCurrentScope->getSymbol ( $1 );
             if ( pSymbol == nullptr ) {
-                $$ = new IdentifierLookup ( false, new VariableEntry ( $1, nullptr ) );
+                $$ = new IdentifierLookup ( 
+                    false, 
+                    new TreeNodeIdentifier ( 
+                        TreeNodeLabels :: __VAR,
+                        new VariableEntry ( $1, nullptr ) 
+                    )
+                );
             } else {
-                $$ = new IdentifierLookup ( false, pSymbol );
+                $$ = new IdentifierLookup ( 
+                    false, 
+                    new TreeNodeIdentifier ( 
+                        TreeNodeLabels :: __VAR,
+                        pSymbol
+                    )
+                );
             }
         } else {
-            $$ = new IdentifierLookup ( false, new VariableEntry ( $1, nullptr ) );
+            $$ = new IdentifierLookup ( 
+                    false, 
+                    new TreeNodeIdentifier ( 
+                        TreeNodeLabels :: __VAR,
+                        new VariableEntry ( $1, nullptr ) 
+                    )
+                );
         }
     }
 
@@ -185,14 +226,16 @@ N_ARRAY_SYMBOL_ACCESS:
     N_NON_ARRAY_SYMBOL_ACCESS N_ARRAY_SUBSCRIPT {
 
         if ( ! $1->first ) {
-            auto pType = $1->second->getType();
+            auto pSymbol = $1->second->getSymbol();
+            auto pType = pSymbol->getType();
             if ( pType != nullptr ) {
                 if ( pType->getName()[0] != 'A' ) {
                     $1->first = true;
-                    error :: nonArrayTypeArrayAccess ( $1->second->getName() );
+                    error :: nonArrayTypeArrayAccess ( pSymbol->getName() );
                 } else {
-                    if ( pType->matchArraySubscript ( $2 ) ) {
-                        $1->second = ( reinterpret_cast < VariableEntry * > ( $1->second ) )->getValue().arrayValue[ $2->second ];
+                    int accessedElement = pType->matchArraySubscript ( $2 );
+                    if ( accessedElement ) {
+                        $1->second->setSymbol ( ( reinterpret_cast < VariableEntry * > ( pSymbol ) )->getValue().arrayValue[ accessedElement ] );
                     } else {
                         $1->first = true;
                     }
@@ -205,23 +248,22 @@ N_ARRAY_SYMBOL_ACCESS:
 N_VARIABLE_ACCESS:
     N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE {
         if ( ! $1->first ) {
-            std :: string typeName = $1->second->getTypeName();
+            std :: string typeName = $1->second->getSymbol()->getTypeName();
             if ( typeName[0] < '0' || typeName[0] > '9' ) {
                 error :: nonStructureType ( typeName.c_str() );
                 $1->first = true;
                 pCurrentScope = nullptr;
             } else {
-                pCurrentScope = ( reinterpret_cast < StructuredTypeEntry * > ( $1->second->getType() ) )->getScope();
+                pCurrentScope = ( reinterpret_cast < StructuredTypeEntry * > ( $1->second->getSymbol()->getType() ) )->getScope();
             }
         } else {
             pCurrentScope = nullptr;
         }
-        delete $1;
     } '.' N_SYMBOL_ACCESS { 
         if ( pCurrentScope != nullptr ) {
-            if ( $5->second == nullptr ) {
+            if ( $5->second->getSymbol()->getType() == nullptr ) {
                 $5->first = true;
-                error :: nonExistentMember ( $1->second->getTypeName().c_str(), $5->second->getName() );
+                error :: nonExistentMember ( $1->second->getSymbol()->getTypeName().c_str(), $5->second->getSymbol()->getName() );
             }
         } 
         pCurrentScope = $2;
@@ -229,9 +271,9 @@ N_VARIABLE_ACCESS:
     } |
     N_SYMBOL_ACCESS {
         if ( ! $1->first ) {
-            if ( $1->second->getType() == nullptr ) {
+            if ( $1->second->getSymbol()->getType() == nullptr ) {
                 $1->first = true;
-                error :: undeclaredSymbol ( $1->second->getName() );
+                error :: undeclaredSymbol ( $1->second->getSymbol()->getName() );
             }
         }
         $$ = $1;
@@ -244,7 +286,7 @@ N_PARAMETER:
     N_PARAMETER_LIST {
         $$ = $1;
     }|
-    { $$ = new IdentifierList; };
+    { $$ = new ParameterCallList; };
 
 N_PARAMETER_LIST:
     N_PARAMETER_LIST ',' N_SYMBOL_ACCESS {
@@ -252,7 +294,7 @@ N_PARAMETER_LIST:
         $$ = $1;
     } |
     N_SYMBOL_ACCESS {
-        $$ = new IdentifierList;
+        $$ = new ParameterCallList;
         $$->push_back ( $1->second );
     }
 
@@ -262,15 +304,38 @@ N_MIXED_TYPE:
     T_IDENTIFIER;
 
 N_EXPRESSION: 
-    N_EXPRESSION '+' N_EXPRESSION |
-    N_EXPRESSION '-' N_EXPRESSION |
-    N_EXPRESSION '*' N_EXPRESSION |
-    N_EXPRESSION '/' N_EXPRESSION |
-    '(' N_EXPRESSION ')' {} |
-    '-' N_EXPRESSION %prec UMINUS {} |
+    N_EXPRESSION '+' N_EXPRESSION {
+        TreeNode ** pChildren = new TreeNode * [2];
+        pChildren[0] = $1;
+        pChildren[1] = $3;
+        $$ = new TreeNode ( TreeNodeLabels :: __PLUS, 2, pChildren );
+    } |
+    N_EXPRESSION '-' N_EXPRESSION {
+        TreeNode ** pChildren = new TreeNode * [2];
+        pChildren[0] = $1;
+        pChildren[1] = $3;
+        $$ = new TreeNode ( TreeNodeLabels :: __MINUS, 2, pChildren );
+    } |
+    N_EXPRESSION '*' N_EXPRESSION {
+        TreeNode ** pChildren = new TreeNode * [2];
+        pChildren[0] = $1;
+        pChildren[1] = $3;
+        $$ = new TreeNode ( TreeNodeLabels :: __MUL, 2, pChildren );
+    } |
+    N_EXPRESSION '/' N_EXPRESSION {
+        TreeNode ** pChildren = new TreeNode * [2];
+        pChildren[0] = $1;
+        pChildren[1] = $3;
+        $$ = new TreeNode ( TreeNodeLabels :: __DIV, 2, pChildren );
+    } |
+    '(' N_EXPRESSION ')' { $$ = $2; } |
+    '-' N_EXPRESSION %prec UMINUS { 
+        TreeNode ** pChild = new TreeNode *;
+        (*pChild) = $2;
+        $$ = new TreeNode ( TreeNodeLabels :: __UMINUS, 1, pChild );
+    } |
     N_CONSTANT_VALUE |
-    N_VARIABLE_ACCESS { }
-
+    N_VARIABLE_ACCESS { $$ = $1->second; }
 
 N_BOOL_EXPRESSION:
     N_BOOL_EXPRESSION T_BAND N_BOOL_EXPRESSION |
@@ -349,8 +414,8 @@ M_BLOCK_BEGIN: {
 
 N_FUNCTION_DECLARATION: 
     N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' N_BLOCK {
-        pCurrentScope->addFunction ( $2, $1, nullptr, $4, $6 );
-        $6->addVariable ( $1, "$return" );
+        pCurrentScope->addFunction ( $2, $1, $6->second, $4, $6->first );
+        ($6->first)->addVariable ( $1, "$return" );
     } |
     N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' {
         error :: functionDeclaration();
@@ -373,7 +438,7 @@ N_PARAMETER_DECLARATION_LIST:
 
 
 N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}' {
-        $$ = pCurrentScope;
+        $$ = new BlockType ( pCurrentScope, $3 );
         debugOut << "Scope: " << pCurrentScope << '\n' << "With variables:\n";
         for ( auto e : * pCurrentScope->getSymbolTable()->getSymbols() ) {
             debugOut << e->getTypeName() << ' ' << e->getName() << '\n';
@@ -388,19 +453,39 @@ N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}' {
 
 
 N_STATEMENT:
-    N_STATEMENT N_ASSIGNMENT ';' |
+    N_STATEMENT N_ASSIGNMENT ';' {
+        TreeNode ** pChildren = new TreeNode * [2];
+        pChildren[0] = $1;
+        pChildren[1] = $2;
+        $$ = new TreeNode ( TreeNodeLabels :: __STMT, 2, pChildren );
+    } |
     N_STATEMENT N_IF_STATEMENT |
     N_STATEMENT N_WHILE_STATEMENT |
     N_STATEMENT N_FOR_STATEMENT |
-    N_STATEMENT N_EXPRESSION ';' |
+    N_STATEMENT N_EXPRESSION ';' {
+        TreeNode ** pChildren = new TreeNode * [2];
+        pChildren[0] = $1;
+        pChildren[1] = $2;
+        $$ = new TreeNode ( TreeNodeLabels :: __STMT, 2, pChildren );
+    } |
     N_STATEMENT N_BLOCK_SCOPE_DECLARATION ';' { } |
     N_STATEMENT error ';' { ++ errorCount; }|
-    N_STATEMENT N_BLOCK |
-    { };
+    N_STATEMENT N_BLOCK {
+        TreeNode ** pChildren = new TreeNode * [2];
+        pChildren[0] = $1;
+        pChildren[1] = $2->second;
+        $$ = new TreeNode ( TreeNodeLabels :: __STMT, 2, pChildren );
+    } |
+    { $$ = new TreeNode ( TreeNodeLabels :: __STMT, 0, nullptr ); };
 
 
 N_ASSIGNMENT:
-    N_VARIABLE_ACCESS '=' N_EXPRESSION { } 
+    N_VARIABLE_ACCESS '=' N_EXPRESSION {
+        TreeNode ** pChildren = new TreeNode * [2];
+        pChildren[0] = $1->second;
+        pChildren[1] = $3;
+        $$ = new TreeNode ( TreeNodeLabels :: __ASG, 2, pChildren );
+    }
 
 
 N_IF_STATEMENT:
