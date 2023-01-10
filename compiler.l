@@ -28,7 +28,7 @@ IntNumber    (0|[1-9]{digit}*)
 FloatNumber  {IntNumber}\.{IntNumber}
 CharValue    '{letter}'
 BoolValue    (true|false)
-StringValue  "({letter}|{digit})*"
+StringValue  \"({letter}|{digit})*\"
 Identifier   ({letter}|_)({letter}|{digit}|_)*
 
 %%

@@ -41,6 +41,11 @@ public:
 
 
 private:
+
+    auto _copyScope (
+        Scope * pOtherScope
+    ) -> void;
+
     auto _typeExistenceCheck (
         char const * pTypeName
     ) -> TypeEntry *;
@@ -51,7 +56,12 @@ public:
     auto addVariable (
         char const * pSymbolType,
         char const * pSymbolName
-    ) -> void;
+    ) -> VariableEntry *;
+
+    auto addVariable (
+        TypeEntry  * pSymbolType,
+        char const * pSymbolName
+    ) -> VariableEntry *;
 
     
     auto addArrayVariable (
@@ -64,7 +74,7 @@ public:
     auto addFunction (
         char const                   * pFunctionName,
         char const                   * pReturnTypeName,
-        TreeNodeIdentifier           * pFunctionBody,
+        TreeNode                     * pFunctionBody,
         ParameterDeclarationList     * pParameterListTypes,
         Scope                        * pScope
     ) -> void;

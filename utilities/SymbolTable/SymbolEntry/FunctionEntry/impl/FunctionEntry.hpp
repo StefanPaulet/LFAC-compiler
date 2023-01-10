@@ -6,7 +6,7 @@
 FunctionEntry :: FunctionEntry ( 
         char const              * pname,
         TypeEntry               * pReturnType,
-        TreeNodeIdentifier      * pFunctionBody,
+        TreeNode      * pFunctionBody,
         ParameterList           * pParameterList,
         Scope                   * pScope
 ) : 
@@ -36,8 +36,8 @@ auto FunctionEntry :: getTypeName () const -> std :: string {
 
     std :: string s ( this->_pReturnType->getName() );
     s += '(';
-    for ( auto e = this->_pParameterList->begin(); e != this->_pParameterList->end(); ++ e ) {
-        s += (*e)->first->getName();
+    for ( auto e : * this->_pParameterList ) {
+        s += e->getTypeName();
         s += ",";
     }
     if ( ! this->_pParameterList->empty() ) {
@@ -54,8 +54,8 @@ constexpr auto FunctionEntry :: getType () const -> TypeEntry * {
 }
 
 
-auto FunctionEntry :: matchParameterList (
-    std :: list < SymbolEntry * > * pParameterList
+auto FunctionEntry :: matchParameterCallList (
+    ParameterList * pParameterList
 ) -> bool {
 
     if ( pParameterList->size() != this->_pParameterList->size() ) {
@@ -72,11 +72,11 @@ auto FunctionEntry :: matchParameterList (
             error :: undeclaredSymbol ( (*e1)->getName() );
             return false;
         }
-        if ( ! strcmp ( (*e2)->first->getName(), "nonExistentType" ) ) {
+        if ( ! strcmp ( (*e2)->getType()->getName(), "nonExistentType" ) ) {
             continue;
         }
-        if ( (*e1)->getType() != (*e2)->first ) {
-            error :: mismatchetParameterType ( parameterCount, (*e2)->first->getName(), (*e1)->getTypeName().c_str() );
+        if ( (*e1)->getType() != (*e2)->getType() ) {
+            error :: mismatchetParameterType ( parameterCount, (*e2)->getName(), (*e1)->getTypeName().c_str() );
             return false;
         }
     }
@@ -88,6 +88,12 @@ auto FunctionEntry :: matchParameterList (
 constexpr auto FunctionEntry :: getScope () const -> Scope * {
     
     return this->_pScope;
+}
+
+auto FunctionEntry :: setFunctionBody ( 
+    TreeNode * pFunctionBody
+) -> void {
+    this->_pFunctionBody = pFunctionBody;
 }
 
 #endif //__FUNCTION_ENTRY_IMPL_HPP__

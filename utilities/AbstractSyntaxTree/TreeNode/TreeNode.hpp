@@ -3,17 +3,17 @@
 
 class TreeNode {
 
-protected:
+public:
     enum _OPERATORS {
         __PLUS,
         __MINUS,
+        __UMINUS,
         __MUL,
         __DIV,
         __ASG,
         __BNOT,
         __BAND,
         __BOR,
-        __BXOR,
         __VAR,
         __CONST,
         __IF,
@@ -21,8 +21,30 @@ protected:
         __FOR,
         __FUNC,
         __CALL,
+        __STMT,
         __ROOT
     };
+
+    enum ValueType {
+        __STRING, __CHAR, __BOOL, __FLOAT, __INT
+    };
+
+    union ValueUnion {
+        char const * stringValue;
+        char         charValue;
+        bool         boolValue;
+        float        floatValue;
+        int          intValue;
+
+        ValueUnion () = default;
+        ValueUnion ( char const * str ) : stringValue ( strdup ( str ) ) {} 
+        ValueUnion ( char chr ) : charValue ( chr ) { }
+        ValueUnion ( bool val ) : boolValue ( val ) { }
+        ValueUnion ( float val ) : floatValue ( val ) { }
+        ValueUnion ( int val ) : intValue ( val ) { }
+    };
+
+protected:
 
     _OPERATORS   _label { __ROOT };
 
@@ -35,42 +57,26 @@ protected:
 public:
     TreeNode () = default;
 
-    TreeNode ( TreeNode const * node ) {
-
-        this->_label      = node->_label;
-        this->_childCount = node->_childCount;
-        this->_pChildList = new TreeNode * [ node->_childCount ];
-
-        for ( auto i = 0; i < node->_childCount; ++ i ) {
-            this->_pChildList [ i ] = new TreeNode ( node->_pChildList [ i ] );
-        }
-    }
-
     TreeNode (
         _OPERATORS   label,
         unsigned int childCount,
         TreeNode * * pchildList
     ) :
         _label      ( label ),
-        _childCount ( childCount) {
-
-            if ( pchildList != nullptr ) {
-                this->_pChildList = new TreeNode * [ childCount ];
-                for ( auto i = 0; i < childCount; ++ i ) {
-                    this->_pChildList [ i ] = new TreeNode ( pchildList [ i ] );
-                }
-            }
+        _childCount ( childCount),
+        _pChildList ( pchildList ) {
         }
 
-    ~TreeNode () {
+    ~TreeNode ();
 
-        if ( this->_pChildList != nullptr ) { 
-            for ( auto i = 0; i < this->_childCount; ++ i ) {
-                delete this->_pChildList [ i ];
-            }
-            delete[] this->_pChildList;
-        }
-    }
+    auto setChildList (
+        TreeNode * * pChildList
+    ) -> void;
+    auto setParent (
+        TreeNode * pParent
+    ) -> void;
+
+    virtual auto eval () -> ValueUnion;
 };
 
 #endif //__TREE_NODE_HPP__

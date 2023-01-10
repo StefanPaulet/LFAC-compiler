@@ -10,7 +10,8 @@ Scope * Scope :: pGlobalScope = new Scope (
                     new TypeEntry ( "bool", 1 ),
                     new TypeEntry ( "float", 4 ),
                     new TypeEntry ( "int", 4 ),
-                    new TypeEntry ( "string", 8 )
+                    new TypeEntry ( "string", 8 ),
+                    new TypeEntry ( "function", 1 )
                 }
             )
     );
@@ -54,6 +55,22 @@ auto constexpr Scope :: getTypeTable () -> TypeTable * {
 }
 
 
+auto Scope :: _copyScope (
+    Scope * pOtherScope
+) -> void {
+    this->_pTypes = pOtherScope->_pTypes;
+    this->_pUpperScope = pOtherScope->_pUpperScope;
+    for ( auto e : * pOtherScope->_pSymbols->getSymbols() ) {
+        auto pVar = dynamic_cast < VariableEntry * > ( e );
+        if ( pVar != nullptr ) {
+            this->addVariable ( pVar->getType()->getName(), pVar->getName() );
+        } else {
+            this->_pSymbols->addSymbol ( e );
+        }
+    }
+}
+
+
 auto Scope :: _typeExistenceCheck (
     char const * pTypeName
 ) -> TypeEntry * {
@@ -71,26 +88,59 @@ auto Scope :: _typeExistenceCheck (
 auto Scope :: addVariable (
     char const * pSymbolType,
     char const * pSymbolName
-) -> void {
+) -> VariableEntry * {
 
     auto pType = this->_typeExistenceCheck ( pSymbolType );
     if ( pType == nullptr ) {
         error :: undefinedType ( pSymbolType );
-        return;
+        return nullptr;
     }
 
     auto symbolEntry = this->_pSymbols->lookUpSymbol ( pSymbolName );
     if ( symbolEntry != nullptr ) {
         error :: variableRedeclaration ( pSymbolName, symbolEntry );
-        return;
+        return nullptr;
+    }
+
+    auto pNewEntry = new VariableEntry (
+                        pSymbolName,
+                        pType
+                    );
+
+    if ( * pType->getName() >= '0' && * pType->getName() <= '9' ) {
+        Scope * pScopeView = new Scope;
+        auto pCopiedScope = ( reinterpret_cast < StructuredTypeEntry * > ( pType ) )->getScope();
+        pScopeView->_copyScope ( pCopiedScope );
+        pNewEntry->setValue ( pScopeView );
     }
 
     this->_pSymbols->addSymbol ( 
-        new VariableEntry (
-                pSymbolName,
-                pType
-            )
+            pNewEntry
         );
+    return pNewEntry;
+}
+
+
+auto Scope :: addVariable (
+    TypeEntry  * pSymbolType,
+    char const * pSymbolName
+) -> VariableEntry * {
+
+    auto symbolEntry = this->_pSymbols->lookUpSymbol ( pSymbolName );
+    if ( symbolEntry != nullptr ) {
+        error :: variableRedeclaration ( pSymbolName, symbolEntry );
+        return nullptr;
+    }
+
+    auto pNewEntry = new VariableEntry (
+                        pSymbolName,
+                        pSymbolType
+                    );
+
+    this->_pSymbols->addSymbol ( 
+            pNewEntry
+        );
+    return pNewEntry;
 }
 
 
@@ -138,7 +188,7 @@ auto Scope :: addArrayVariable (
 auto Scope :: addFunction (
     char const                   * pFunctionName,
     char const                   * pReturnTypeName,
-    TreeNodeIdentifier           * pFunctionBody,
+    TreeNode                     * pFunctionBody,
     ParameterDeclarationList     * pParameterListTypes,
     Scope                        * pScope
 ) -> void {
@@ -162,13 +212,14 @@ auto Scope :: addFunction (
             error :: undefinedType ( e->first );
             pType = pGlobalScope->getTypeTable()->getTypes()->front();
         }
-        pParameters->push_back ( new FunctionEntry :: ParameterPair ( pType, e->second ) );
+        pParameters->push_back ( pScope->addVariable ( pType, e->second ) );
     }
+    pScope->addVariable ( pReturnTypeName, "$return" );
 
     this->_pSymbols->addSymbol ( 
         new FunctionEntry (
                 pFunctionName,
-                pReturnType,
+                pGlobalScope->getTypeTable()->getType ( "function" ),
                 pFunctionBody,
                 pParameters,
                 pScope

@@ -12,13 +12,12 @@ class Scope;
 class FunctionEntry : public SymbolEntry {
 
 public:
-    using ParameterPair  = std :: pair < TypeEntry *, char const * >;
-    using ParameterList  = std :: list < ParameterPair * >;
+    using ParameterList  = std :: list < SymbolEntry * >;
     
 private:
     TypeEntry * _pReturnType;
 
-    TreeNodeIdentifier * _pFunctionBody;
+    TreeNode * _pFunctionBody;
 
     ParameterList * _pParameterList;
 
@@ -29,7 +28,7 @@ public:
     FunctionEntry ( 
         char const          * pname,
         TypeEntry           * pReturnType,
-        TreeNodeIdentifier  * pFunctionBody,
+        TreeNode            * pFunctionBody,
         ParameterList       * pParameterList,
         Scope               * pScope
     );
@@ -44,12 +43,19 @@ public:
     constexpr auto getType () const -> TypeEntry * override;
     
 
-    auto matchParameterList (
-        std :: list < SymbolEntry * > * pParameterList
+    auto matchParameterCallList (
+        ParameterList * pParameterList
     ) -> bool;
 
 
     constexpr auto getScope () const -> Scope *;
+
+
+    auto setFunctionBody ( 
+        TreeNode * pFunctionBody
+    ) -> void;
 };
+
+#include "../../../AbstractSyntaxTree/TreeNode/impl/TreeNodeIdentifier.hpp"
 
 #endif //__FUNCTION_ENTRY_HPP__

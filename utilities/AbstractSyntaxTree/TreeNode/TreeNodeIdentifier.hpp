@@ -9,19 +9,39 @@
 class TreeNodeIdentifier : public TreeNode {
 
 private:
-    VariableEntry * _pEntry { nullptr };
+    using TreeNode :: ValueType;
+    using TreeNode :: _OPERATORS;
+    SymbolEntry * _pEntry { nullptr };
 
 public:
     TreeNodeIdentifier () = default;
 
-    TreeNodeIdentifier ( TreeNodeIdentifier const * node );
-
     TreeNodeIdentifier (
         _OPERATORS      label,
-        unsigned int    childCount,
-        TreeNode * *    pChildList,
-        char const *    pEntry
+        SymbolEntry *   pEntry
     );
+
+
+    auto getSymbol () -> SymbolEntry *;
+
+
+    auto setSymbol (
+        SymbolEntry * pNewSymbol
+    ) -> void;
+
+
+    auto setLabel (
+        _OPERATORS newLabel
+    ) -> void;
+
+
+    auto getVal () -> ValueUnion;
+
+    auto setVal ( 
+        ValueUnion val
+    ) -> void;
+
+    auto eval () -> ValueUnion override;
 };
 
 #include "../../SymbolTable/SymbolEntry/VariableEntry/impl/VariableEntry.hpp"

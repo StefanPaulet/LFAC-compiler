@@ -110,7 +110,12 @@ namespace error {
     ) -> void {
 
         ++ errorCount;
-        std :: string errorMsg = "Identifier " + std :: string ( pSymbolName ) + " does not have array type";
+        std :: string errorMsg;
+        if ( ! strcmp ( pSymbolName, "$return" ) ) {
+            errorMsg = "Return type of function does not have array type";
+        } else {
+            errorMsg = "Identifier " + std :: string ( pSymbolName ) + " does not have array type";
+        }
         yyerror ( errorMsg.c_str() );
     }
 
@@ -168,6 +173,38 @@ namespace error {
 
         ++ errorCount;
         std :: string errorMsg = "Operation not supported: Function declaration without definition";
+        yyerror ( errorMsg.c_str() );
+    }
+
+
+    auto mismatchedTypes (
+        char const * pTypeName1,
+        char const * pTypeName2
+    ) -> void {
+
+        ++ errorCount;
+        std :: string errorMsg = "Types " + std :: string ( pTypeName1 ) + " and " + std :: string ( pTypeName2 ) + " are not compatible";
+        yyerror ( errorMsg.c_str() );
+    }
+
+
+    auto assignmentMismatchedTypes (
+        char const * pTypeName1,
+        char const * pTypeName2
+    ) -> void {
+
+        ++ errorCount;
+        std :: string errorMsg = "Type " + std :: string ( pTypeName1 ) + " of left operand is different than type " + std :: string ( pTypeName2 ) + " of right operand";
+        yyerror ( errorMsg.c_str() ); 
+    }
+
+
+    auto constIdentifierAssigned (
+        char const * pIdentifierName
+    ) -> void {
+
+        ++ errorCount;
+        std :: string errorMsg = "Identifier " + std :: string ( pIdentifierName ) + " is const qualified and can't be on the left side of an assignment";
         yyerror ( errorMsg.c_str() );
     }
 }

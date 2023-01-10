@@ -1,15 +1,3 @@
-Nonterminals useless in grammar
-
-    N_VARIABLE_DEFINITION
-    N_DECLARATION_LIST
-
-
-Rules useless in grammar
-
-   70 N_DECLARATION_LIST: N_DECLARATION_LIST ',' T_IDENTIFIER
-   71                   | T_IDENTIFIER
-
-
 Grammar
 
     0 $accept: N_START $end
@@ -63,88 +51,98 @@ Grammar
    34                  | N_CONSTANT_VALUE
    35                  | N_VARIABLE_ACCESS
 
-   36 N_DECLARATION: N_DECLARATION N_FUNCTION_DECLARATION ';'
+   36 N_DECLARATION: N_DECLARATION N_FUNCTION_DECLARATION
    37              | N_DECLARATION N_BLOCK_SCOPE_DECLARATION ';'
    38              | N_DECLARATION error ';'
    39              | ε
 
    40 N_BLOCK_SCOPE_DECLARATION: N_CLASS_DECLARATION
    41                          | N_VARIABLE_DECLARATION
+   42                          | N_VARIABLE_DEFINITION
 
-   42 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER
-   43                       | N_MIXED_TYPE T_CONST T_IDENTIFIER
-   44                       | N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT
-   45                       | N_MIXED_TYPE T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT
+   43 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER
+   44                       | N_MIXED_TYPE T_CONST T_IDENTIFIER
+   45                       | N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT
+   46                       | N_MIXED_TYPE T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT
 
-   46 N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT
-   47                  | '[' T_INT_NUMBER ']'
+   47 N_VARIABLE_DEFINITION: N_MIXED_TYPE T_IDENTIFIER '=' N_EXPRESSION
+   48                      | N_MIXED_TYPE T_CONST T_IDENTIFIER '=' N_EXPRESSION
 
-   48 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION '}'
+   49 N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT
+   50                  | '[' T_INT_NUMBER ']'
 
-   49 M_BLOCK_BEGIN: ε
+   51 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION '}'
 
-   50 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' N_BLOCK
-   51                       | N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')'
+   52 M_BLOCK_BEGIN: ε
 
-   52 N_PARAMETER_DECLARATION: N_PARAMETER_DECLARATION_LIST
-   53                        | ε
+   53 $@2: ε
 
-   54 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE T_IDENTIFIER
-   55                             | N_MIXED_TYPE T_IDENTIFIER
+   54 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')' $@2 N_FUNCTION_BLOCK
+   55                       | N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')'
 
-   56 N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}'
+   56 M_FUNCTION_DECLARATION_BLOCK_BEGIN: ε
 
-   57 N_STATEMENT: N_STATEMENT N_ASSIGNMENT ';'
-   58            | N_STATEMENT N_IF_STATEMENT
-   59            | N_STATEMENT N_WHILE_STATEMENT
-   60            | N_STATEMENT N_FOR_STATEMENT
-   61            | N_STATEMENT N_EXPRESSION ';'
-   62            | N_STATEMENT N_BLOCK_SCOPE_DECLARATION ';'
-   63            | N_STATEMENT error ';'
-   64            | N_STATEMENT N_BLOCK
-   65            | ε
+   57 N_FUNCTION_BLOCK: '{' N_STATEMENT '}'
 
-   66 N_ASSIGNMENT: N_VARIABLE_ACCESS '=' N_EXPRESSION
+   58 N_PARAMETER_DECLARATION: N_PARAMETER_DECLARATION_LIST
+   59                        | ε
 
-   67 N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION ')' N_BLOCK
+   60 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE T_IDENTIFIER
+   61                             | N_MIXED_TYPE T_IDENTIFIER
 
-   68 N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION ')' N_BLOCK
+   62 N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}'
 
-   69 N_FOR_STATEMENT: T_FOR '(' ',' ',' ')' N_BLOCK
+   63 N_STATEMENT: N_STATEMENT N_ASSIGNMENT ';'
+   64            | N_STATEMENT N_IF_STATEMENT
+   65            | N_STATEMENT N_WHILE_STATEMENT
+   66            | N_STATEMENT N_FOR_STATEMENT
+   67            | N_STATEMENT N_EXPRESSION ';'
+   68            | N_STATEMENT N_BLOCK_SCOPE_DECLARATION ';'
+   69            | N_STATEMENT error ';'
+   70            | N_STATEMENT N_BLOCK
+   71            | ε
+
+   72 N_ASSIGNMENT: N_VARIABLE_ACCESS '=' N_EXPRESSION
+
+   73 N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION ')' N_BLOCK
+
+   74 N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION ')' N_BLOCK
+
+   75 N_FOR_STATEMENT: T_FOR '(' ',' ',' ')' N_BLOCK
 
 
 Terminals, with rules where they appear
 
     $end (0) 0
     '!' (33) 33
-    '(' (40) 1 9 27 50 51 67 68 69
-    ')' (41) 1 9 27 50 51 67 68 69
+    '(' (40) 1 9 27 54 55 73 74 75
+    ')' (41) 1 9 27 54 55 73 74 75
     '*' (42) 25
     '+' (43) 23
-    ',' (44) 19 54 69
+    ',' (44) 19 60 75
     '-' (45) 24 28
     '.' (46) 14
     '/' (47) 26
-    ';' (59) 36 37 38 57 61 62 63
-    '=' (61) 66
-    '[' (91) 46 47
-    ']' (93) 46 47
-    '{' (123) 48 56
-    '}' (125) 48 56
-    error (256) 38 63
-    T_INT_NUMBER <intValue> (258) 2 46 47
+    ';' (59) 37 38 63 67 68 69
+    '=' (61) 47 48 72
+    '[' (91) 49 50
+    ']' (93) 49 50
+    '{' (123) 51 57 62
+    '}' (125) 51 57 62
+    error (256) 38 69
+    T_INT_NUMBER <intValue> (258) 2 49 50
     T_CHAR_VALUE <charValue> (259) 4
     T_FLOAT_NUMBER <floatValue> (260) 3
     T_BOOL_VALUE <boolValue> (261) 5
     T_STRING_VALUE <stringValue> (262) 6
     T_MAIN_IDENTIFIER (263) 1
-    T_CLASS (264) 48
-    T_IF (265) 67
-    T_WHILE (266) 68
-    T_FOR (267) 69
-    T_CONST (268) 43 45
+    T_CLASS (264) 51
+    T_IF (265) 73
+    T_WHILE (266) 74
+    T_FOR (267) 75
+    T_CONST (268) 44 46 48
     T_TYPE <stringValue> (269) 1 21
-    T_IDENTIFIER <stringValue> (270) 10 22 42 43 44 45 48 50 51 54 55
+    T_IDENTIFIER <stringValue> (270) 10 22 43 44 45 46 47 48 51 54 55 60 61
     T_BAND (271) 31
     T_BOR (272) 32
     UNOT (273)
@@ -158,7 +156,7 @@ Nonterminals, with rules where they appear
     N_START (36)
         on left: 1
         on right: 0
-    N_CONSTANT_VALUE <intValue> (37)
+    N_CONSTANT_VALUE <pExpression> (37)
         on left: 2 3 4 5 6
         on right: 29 34
     N_SYMBOL_ACCESS <pIdentifierLookup> (38)
@@ -175,73 +173,85 @@ Nonterminals, with rules where they appear
         on right: 8
     N_VARIABLE_ACCESS <pIdentifierLookup> (42)
         on left: 14 15
-        on right: 14 30 35 66
+        on right: 14 30 35 72
     $@1 (43)
         on left: 13
         on right: 14
     M_CLASS_ACCESS_SCOPE_CHANGE <pScope> (44)
         on left: 16
         on right: 14
-    N_PARAMETER <pSymbolList> (45)
+    N_PARAMETER <pParameterCallList> (45)
         on left: 17 18
         on right: 9
-    N_PARAMETER_LIST <pSymbolList> (46)
+    N_PARAMETER_LIST <pParameterCallList> (46)
         on left: 19 20
         on right: 17 19
     N_MIXED_TYPE <stringValue> (47)
         on left: 21 22
-        on right: 42 43 44 45 50 51 54 55
-    N_EXPRESSION <intValue> (48)
+        on right: 43 44 45 46 47 48 54 55 60 61
+    N_EXPRESSION <pExpression> (48)
         on left: 23 24 25 26 27 28 29 30
-        on right: 23 24 25 26 27 28 61 66
-    N_BOOL_EXPRESSION <boolValue> (49)
+        on right: 23 24 25 26 27 28 47 48 67 72
+    N_BOOL_EXPRESSION <pTreeNode> (49)
         on left: 31 32 33 34 35
-        on right: 31 32 33 67 68
-    N_DECLARATION <pScope> (50)
+        on right: 31 32 33 73 74
+    N_DECLARATION <pTreeNode> (50)
         on left: 36 37 38 39
-        on right: 1 36 37 38 48
-    N_BLOCK_SCOPE_DECLARATION <pScope> (51)
-        on left: 40 41
-        on right: 37 62
-    N_VARIABLE_DECLARATION <pScope> (52)
-        on left: 42 43 44 45
+        on right: 1 36 37 38 51
+    N_BLOCK_SCOPE_DECLARATION <pTreeNode> (51)
+        on left: 40 41 42
+        on right: 37 68
+    N_VARIABLE_DECLARATION <pTreeNode> (52)
+        on left: 43 44 45 46
         on right: 41
-    N_ARRAY_SUBSCRIPT <pArraytypePair> (53)
-        on left: 46 47
-        on right: 12 44 45 46
-    N_CLASS_DECLARATION <pScope> (54)
-        on left: 48
+    N_VARIABLE_DEFINITION <pTreeNode> (53)
+        on left: 47 48
+        on right: 42
+    N_ARRAY_SUBSCRIPT <pArraytypePair> (54)
+        on left: 49 50
+        on right: 12 45 46 49
+    N_CLASS_DECLARATION <pTreeNode> (55)
+        on left: 51
         on right: 40
-    M_BLOCK_BEGIN <stringValue> (55)
-        on left: 49
-        on right: 48 56
-    N_FUNCTION_DECLARATION <pScope> (56)
-        on left: 50 51
-        on right: 36
-    N_PARAMETER_DECLARATION <pParamDeclarationList> (57)
-        on left: 52 53
-        on right: 50 51
-    N_PARAMETER_DECLARATION_LIST <pParamDeclarationList> (58)
+    M_BLOCK_BEGIN <pTreeNode> (56)
+        on left: 52
+        on right: 51 62
+    N_FUNCTION_DECLARATION <pTreeNode> (57)
         on left: 54 55
-        on right: 52 54
-    N_BLOCK <pScope> (59)
+        on right: 36
+    $@2 (58)
+        on left: 53
+        on right: 54
+    M_FUNCTION_DECLARATION_BLOCK_BEGIN <pScope> (59)
         on left: 56
-        on right: 1 50 64 67 68 69
-    N_STATEMENT <stringValue> (60)
-        on left: 57 58 59 60 61 62 63 64 65
-        on right: 56 57 58 59 60 61 62 63 64
-    N_ASSIGNMENT <stringValue> (61)
-        on left: 66
-        on right: 57
-    N_IF_STATEMENT <stringValue> (62)
-        on left: 67
-        on right: 58
-    N_WHILE_STATEMENT <stringValue> (63)
-        on left: 68
-        on right: 59
-    N_FOR_STATEMENT <stringValue> (64)
-        on left: 69
-        on right: 60
+        on right: 54 55
+    N_FUNCTION_BLOCK <pBlock> (60)
+        on left: 57
+        on right: 54
+    N_PARAMETER_DECLARATION <pParamDeclarationList> (61)
+        on left: 58 59
+        on right: 54 55
+    N_PARAMETER_DECLARATION_LIST <pParamDeclarationList> (62)
+        on left: 60 61
+        on right: 58 60
+    N_BLOCK <pBlock> (63)
+        on left: 62
+        on right: 1 70 73 74 75
+    N_STATEMENT <pTreeNode> (64)
+        on left: 63 64 65 66 67 68 69 70 71
+        on right: 57 62 63 64 65 66 67 68 69 70
+    N_ASSIGNMENT <pTreeNode> (65)
+        on left: 72
+        on right: 63
+    N_IF_STATEMENT <pTreeNode> (66)
+        on left: 73
+        on right: 64
+    N_WHILE_STATEMENT <pTreeNode> (67)
+        on left: 74
+        on right: 65
+    N_FOR_STATEMENT <pTreeNode> (68)
+        on left: 75
+        on right: 66
 
 
 State 0
@@ -264,7 +274,7 @@ State 1
 State 2
 
     1 N_START: N_DECLARATION • T_TYPE T_MAIN_IDENTIFIER '(' ')' N_BLOCK
-   36 N_DECLARATION: N_DECLARATION • N_FUNCTION_DECLARATION ';'
+   36 N_DECLARATION: N_DECLARATION • N_FUNCTION_DECLARATION
    37              | N_DECLARATION • N_BLOCK_SCOPE_DECLARATION ';'
    38              | N_DECLARATION • error ';'
 
@@ -276,8 +286,9 @@ State 2
     N_MIXED_TYPE               go to state 8
     N_BLOCK_SCOPE_DECLARATION  go to state 9
     N_VARIABLE_DECLARATION     go to state 10
-    N_CLASS_DECLARATION        go to state 11
-    N_FUNCTION_DECLARATION     go to state 12
+    N_VARIABLE_DEFINITION      go to state 11
+    N_CLASS_DECLARATION        go to state 12
+    N_FUNCTION_DECLARATION     go to state 13
 
 
 State 3
@@ -291,14 +302,14 @@ State 4
 
    38 N_DECLARATION: N_DECLARATION error • ';'
 
-    ';'  shift, and go to state 13
+    ';'  shift, and go to state 14
 
 
 State 5
 
-   48 N_CLASS_DECLARATION: T_CLASS • T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION '}'
+   51 N_CLASS_DECLARATION: T_CLASS • T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION '}'
 
-    T_IDENTIFIER  shift, and go to state 14
+    T_IDENTIFIER  shift, and go to state 15
 
 
 State 6
@@ -306,7 +317,7 @@ State 6
     1 N_START: N_DECLARATION T_TYPE • T_MAIN_IDENTIFIER '(' ')' N_BLOCK
    21 N_MIXED_TYPE: T_TYPE •
 
-    T_MAIN_IDENTIFIER  shift, and go to state 15
+    T_MAIN_IDENTIFIER  shift, and go to state 16
 
     $default  reduce using rule 21 (N_MIXED_TYPE)
 
@@ -320,22 +331,24 @@ State 7
 
 State 8
 
-   42 N_VARIABLE_DECLARATION: N_MIXED_TYPE • T_IDENTIFIER
-   43                       | N_MIXED_TYPE • T_CONST T_IDENTIFIER
-   44                       | N_MIXED_TYPE • T_IDENTIFIER N_ARRAY_SUBSCRIPT
-   45                       | N_MIXED_TYPE • T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT
-   50 N_FUNCTION_DECLARATION: N_MIXED_TYPE • T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' N_BLOCK
-   51                       | N_MIXED_TYPE • T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')'
+   43 N_VARIABLE_DECLARATION: N_MIXED_TYPE • T_IDENTIFIER
+   44                       | N_MIXED_TYPE • T_CONST T_IDENTIFIER
+   45                       | N_MIXED_TYPE • T_IDENTIFIER N_ARRAY_SUBSCRIPT
+   46                       | N_MIXED_TYPE • T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT
+   47 N_VARIABLE_DEFINITION: N_MIXED_TYPE • T_IDENTIFIER '=' N_EXPRESSION
+   48                      | N_MIXED_TYPE • T_CONST T_IDENTIFIER '=' N_EXPRESSION
+   54 N_FUNCTION_DECLARATION: N_MIXED_TYPE • T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')' $@2 N_FUNCTION_BLOCK
+   55                       | N_MIXED_TYPE • T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')'
 
-    T_CONST       shift, and go to state 16
-    T_IDENTIFIER  shift, and go to state 17
+    T_CONST       shift, and go to state 17
+    T_IDENTIFIER  shift, and go to state 18
 
 
 State 9
 
    37 N_DECLARATION: N_DECLARATION N_BLOCK_SCOPE_DECLARATION • ';'
 
-    ';'  shift, and go to state 18
+    ';'  shift, and go to state 19
 
 
 State 10
@@ -347,496 +360,332 @@ State 10
 
 State 11
 
+   42 N_BLOCK_SCOPE_DECLARATION: N_VARIABLE_DEFINITION •
+
+    $default  reduce using rule 42 (N_BLOCK_SCOPE_DECLARATION)
+
+
+State 12
+
    40 N_BLOCK_SCOPE_DECLARATION: N_CLASS_DECLARATION •
 
     $default  reduce using rule 40 (N_BLOCK_SCOPE_DECLARATION)
 
 
-State 12
-
-   36 N_DECLARATION: N_DECLARATION N_FUNCTION_DECLARATION • ';'
-
-    ';'  shift, and go to state 19
-
-
 State 13
+
+   36 N_DECLARATION: N_DECLARATION N_FUNCTION_DECLARATION •
+
+    $default  reduce using rule 36 (N_DECLARATION)
+
+
+State 14
 
    38 N_DECLARATION: N_DECLARATION error ';' •
 
     $default  reduce using rule 38 (N_DECLARATION)
 
 
-State 14
+State 15
 
-   48 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER • '{' M_BLOCK_BEGIN N_DECLARATION '}'
+   51 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER • '{' M_BLOCK_BEGIN N_DECLARATION '}'
 
     '{'  shift, and go to state 20
 
 
-State 15
+State 16
 
     1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER • '(' ')' N_BLOCK
 
     '('  shift, and go to state 21
 
 
-State 16
+State 17
 
-   43 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_CONST • T_IDENTIFIER
-   45                       | N_MIXED_TYPE T_CONST • T_IDENTIFIER N_ARRAY_SUBSCRIPT
+   44 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_CONST • T_IDENTIFIER
+   46                       | N_MIXED_TYPE T_CONST • T_IDENTIFIER N_ARRAY_SUBSCRIPT
+   48 N_VARIABLE_DEFINITION: N_MIXED_TYPE T_CONST • T_IDENTIFIER '=' N_EXPRESSION
 
     T_IDENTIFIER  shift, and go to state 22
 
 
-State 17
+State 18
 
-   42 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER •
-   44                       | N_MIXED_TYPE T_IDENTIFIER • N_ARRAY_SUBSCRIPT
-   50 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER • '(' N_PARAMETER_DECLARATION ')' N_BLOCK
-   51                       | N_MIXED_TYPE T_IDENTIFIER • '(' N_PARAMETER_DECLARATION ')'
+   43 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER •
+   45                       | N_MIXED_TYPE T_IDENTIFIER • N_ARRAY_SUBSCRIPT
+   47 N_VARIABLE_DEFINITION: N_MIXED_TYPE T_IDENTIFIER • '=' N_EXPRESSION
+   54 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER • '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')' $@2 N_FUNCTION_BLOCK
+   55                       | N_MIXED_TYPE T_IDENTIFIER • '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')'
 
     '('  shift, and go to state 23
-    '['  shift, and go to state 24
+    '='  shift, and go to state 24
+    '['  shift, and go to state 25
 
-    $default  reduce using rule 42 (N_VARIABLE_DECLARATION)
+    $default  reduce using rule 43 (N_VARIABLE_DECLARATION)
 
-    N_ARRAY_SUBSCRIPT  go to state 25
+    N_ARRAY_SUBSCRIPT  go to state 26
 
 
-State 18
+State 19
 
    37 N_DECLARATION: N_DECLARATION N_BLOCK_SCOPE_DECLARATION ';' •
 
     $default  reduce using rule 37 (N_DECLARATION)
 
 
-State 19
-
-   36 N_DECLARATION: N_DECLARATION N_FUNCTION_DECLARATION ';' •
-
-    $default  reduce using rule 36 (N_DECLARATION)
-
-
 State 20
 
-   48 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' • M_BLOCK_BEGIN N_DECLARATION '}'
+   51 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' • M_BLOCK_BEGIN N_DECLARATION '}'
 
-    $default  reduce using rule 49 (M_BLOCK_BEGIN)
+    $default  reduce using rule 52 (M_BLOCK_BEGIN)
 
-    M_BLOCK_BEGIN  go to state 26
+    M_BLOCK_BEGIN  go to state 27
 
 
 State 21
 
     1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' • ')' N_BLOCK
 
-    ')'  shift, and go to state 27
+    ')'  shift, and go to state 28
 
 
 State 22
 
-   43 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_CONST T_IDENTIFIER •
-   45                       | N_MIXED_TYPE T_CONST T_IDENTIFIER • N_ARRAY_SUBSCRIPT
+   44 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_CONST T_IDENTIFIER •
+   46                       | N_MIXED_TYPE T_CONST T_IDENTIFIER • N_ARRAY_SUBSCRIPT
+   48 N_VARIABLE_DEFINITION: N_MIXED_TYPE T_CONST T_IDENTIFIER • '=' N_EXPRESSION
 
-    '['  shift, and go to state 24
+    '='  shift, and go to state 29
+    '['  shift, and go to state 25
 
-    $default  reduce using rule 43 (N_VARIABLE_DECLARATION)
+    $default  reduce using rule 44 (N_VARIABLE_DECLARATION)
 
-    N_ARRAY_SUBSCRIPT  go to state 28
+    N_ARRAY_SUBSCRIPT  go to state 30
 
 
 State 23
 
-   50 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' • N_PARAMETER_DECLARATION ')' N_BLOCK
-   51                       | N_MIXED_TYPE T_IDENTIFIER '(' • N_PARAMETER_DECLARATION ')'
+   54 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' • N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')' $@2 N_FUNCTION_BLOCK
+   55                       | N_MIXED_TYPE T_IDENTIFIER '(' • N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')'
 
-    T_TYPE        shift, and go to state 29
+    T_TYPE        shift, and go to state 31
     T_IDENTIFIER  shift, and go to state 7
 
-    $default  reduce using rule 53 (N_PARAMETER_DECLARATION)
+    $default  reduce using rule 59 (N_PARAMETER_DECLARATION)
 
-    N_MIXED_TYPE                  go to state 30
-    N_PARAMETER_DECLARATION       go to state 31
-    N_PARAMETER_DECLARATION_LIST  go to state 32
+    N_MIXED_TYPE                  go to state 32
+    N_PARAMETER_DECLARATION       go to state 33
+    N_PARAMETER_DECLARATION_LIST  go to state 34
 
 
 State 24
 
-   46 N_ARRAY_SUBSCRIPT: '[' • T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT
-   47                  | '[' • T_INT_NUMBER ']'
+   47 N_VARIABLE_DEFINITION: N_MIXED_TYPE T_IDENTIFIER '=' • N_EXPRESSION
 
-    T_INT_NUMBER  shift, and go to state 33
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
+
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 47
+    N_EXPRESSION               go to state 48
 
 
 State 25
 
-   44 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT •
+   49 N_ARRAY_SUBSCRIPT: '[' • T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT
+   50                  | '[' • T_INT_NUMBER ']'
 
-    $default  reduce using rule 44 (N_VARIABLE_DECLARATION)
+    T_INT_NUMBER  shift, and go to state 49
 
 
 State 26
 
-   48 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN • N_DECLARATION '}'
-
-    $default  reduce using rule 39 (N_DECLARATION)
-
-    N_DECLARATION  go to state 34
-
-
-State 27
-
-    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' ')' • N_BLOCK
-
-    '{'  shift, and go to state 35
-
-    N_BLOCK  go to state 36
-
-
-State 28
-
-   45 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT •
+   45 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER N_ARRAY_SUBSCRIPT •
 
     $default  reduce using rule 45 (N_VARIABLE_DECLARATION)
 
 
+State 27
+
+   51 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN • N_DECLARATION '}'
+
+    $default  reduce using rule 39 (N_DECLARATION)
+
+    N_DECLARATION  go to state 50
+
+
+State 28
+
+    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' ')' • N_BLOCK
+
+    '{'  shift, and go to state 51
+
+    N_BLOCK  go to state 52
+
+
 State 29
+
+   48 N_VARIABLE_DEFINITION: N_MIXED_TYPE T_CONST T_IDENTIFIER '=' • N_EXPRESSION
+
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
+
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 47
+    N_EXPRESSION               go to state 53
+
+
+State 30
+
+   46 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT •
+
+    $default  reduce using rule 46 (N_VARIABLE_DECLARATION)
+
+
+State 31
 
    21 N_MIXED_TYPE: T_TYPE •
 
     $default  reduce using rule 21 (N_MIXED_TYPE)
 
 
-State 30
-
-   55 N_PARAMETER_DECLARATION_LIST: N_MIXED_TYPE • T_IDENTIFIER
-
-    T_IDENTIFIER  shift, and go to state 37
-
-
-State 31
-
-   50 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION • ')' N_BLOCK
-   51                       | N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION • ')'
-
-    ')'  shift, and go to state 38
-
-
 State 32
 
-   52 N_PARAMETER_DECLARATION: N_PARAMETER_DECLARATION_LIST •
-   54 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST • ',' N_MIXED_TYPE T_IDENTIFIER
+   61 N_PARAMETER_DECLARATION_LIST: N_MIXED_TYPE • T_IDENTIFIER
 
-    ','  shift, and go to state 39
-
-    $default  reduce using rule 52 (N_PARAMETER_DECLARATION)
+    T_IDENTIFIER  shift, and go to state 54
 
 
 State 33
 
-   46 N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER • ']' N_ARRAY_SUBSCRIPT
-   47                  | '[' T_INT_NUMBER • ']'
+   54 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION • M_FUNCTION_DECLARATION_BLOCK_BEGIN ')' $@2 N_FUNCTION_BLOCK
+   55                       | N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION • M_FUNCTION_DECLARATION_BLOCK_BEGIN ')'
 
-    ']'  shift, and go to state 40
+    $default  reduce using rule 56 (M_FUNCTION_DECLARATION_BLOCK_BEGIN)
+
+    M_FUNCTION_DECLARATION_BLOCK_BEGIN  go to state 55
 
 
 State 34
 
-   36 N_DECLARATION: N_DECLARATION • N_FUNCTION_DECLARATION ';'
-   37              | N_DECLARATION • N_BLOCK_SCOPE_DECLARATION ';'
-   38              | N_DECLARATION • error ';'
-   48 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION • '}'
+   58 N_PARAMETER_DECLARATION: N_PARAMETER_DECLARATION_LIST •
+   60 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST • ',' N_MIXED_TYPE T_IDENTIFIER
 
-    error         shift, and go to state 4
-    T_CLASS       shift, and go to state 5
-    T_TYPE        shift, and go to state 29
-    T_IDENTIFIER  shift, and go to state 7
-    '}'           shift, and go to state 41
+    ','  shift, and go to state 56
 
-    N_MIXED_TYPE               go to state 8
-    N_BLOCK_SCOPE_DECLARATION  go to state 9
-    N_VARIABLE_DECLARATION     go to state 10
-    N_CLASS_DECLARATION        go to state 11
-    N_FUNCTION_DECLARATION     go to state 12
+    $default  reduce using rule 58 (N_PARAMETER_DECLARATION)
 
 
 State 35
-
-   56 N_BLOCK: '{' • M_BLOCK_BEGIN N_STATEMENT '}'
-
-    $default  reduce using rule 49 (M_BLOCK_BEGIN)
-
-    M_BLOCK_BEGIN  go to state 42
-
-
-State 36
-
-    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' ')' N_BLOCK •
-
-    $default  reduce using rule 1 (N_START)
-
-
-State 37
-
-   55 N_PARAMETER_DECLARATION_LIST: N_MIXED_TYPE T_IDENTIFIER •
-
-    $default  reduce using rule 55 (N_PARAMETER_DECLARATION_LIST)
-
-
-State 38
-
-   50 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' • N_BLOCK
-   51                       | N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' •
-
-    '{'  shift, and go to state 35
-
-    $default  reduce using rule 51 (N_FUNCTION_DECLARATION)
-
-    N_BLOCK  go to state 43
-
-
-State 39
-
-   54 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' • N_MIXED_TYPE T_IDENTIFIER
-
-    T_TYPE        shift, and go to state 29
-    T_IDENTIFIER  shift, and go to state 7
-
-    N_MIXED_TYPE  go to state 44
-
-
-State 40
-
-   46 N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']' • N_ARRAY_SUBSCRIPT
-   47                  | '[' T_INT_NUMBER ']' •
-
-    '['  shift, and go to state 24
-
-    $default  reduce using rule 47 (N_ARRAY_SUBSCRIPT)
-
-    N_ARRAY_SUBSCRIPT  go to state 45
-
-
-State 41
-
-   48 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION '}' •
-
-    $default  reduce using rule 48 (N_CLASS_DECLARATION)
-
-
-State 42
-
-   56 N_BLOCK: '{' M_BLOCK_BEGIN • N_STATEMENT '}'
-
-    $default  reduce using rule 65 (N_STATEMENT)
-
-    N_STATEMENT  go to state 46
-
-
-State 43
-
-   50 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION ')' N_BLOCK •
-
-    $default  reduce using rule 50 (N_FUNCTION_DECLARATION)
-
-
-State 44
-
-   54 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE • T_IDENTIFIER
-
-    T_IDENTIFIER  shift, and go to state 47
-
-
-State 45
-
-   46 N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT •
-
-    $default  reduce using rule 46 (N_ARRAY_SUBSCRIPT)
-
-
-State 46
-
-   56 N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT • '}'
-   57 N_STATEMENT: N_STATEMENT • N_ASSIGNMENT ';'
-   58            | N_STATEMENT • N_IF_STATEMENT
-   59            | N_STATEMENT • N_WHILE_STATEMENT
-   60            | N_STATEMENT • N_FOR_STATEMENT
-   61            | N_STATEMENT • N_EXPRESSION ';'
-   62            | N_STATEMENT • N_BLOCK_SCOPE_DECLARATION ';'
-   63            | N_STATEMENT • error ';'
-   64            | N_STATEMENT • N_BLOCK
-
-    error           shift, and go to state 48
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_CLASS         shift, and go to state 5
-    T_IF            shift, and go to state 54
-    T_WHILE         shift, and go to state 55
-    T_FOR           shift, and go to state 56
-    T_TYPE          shift, and go to state 29
-    T_IDENTIFIER    shift, and go to state 57
-    '-'             shift, and go to state 58
-    '('             shift, and go to state 59
-    '{'             shift, and go to state 35
-    '}'             shift, and go to state 60
-
-    N_CONSTANT_VALUE           go to state 61
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 65
-    N_MIXED_TYPE               go to state 66
-    N_EXPRESSION               go to state 67
-    N_BLOCK_SCOPE_DECLARATION  go to state 68
-    N_VARIABLE_DECLARATION     go to state 10
-    N_CLASS_DECLARATION        go to state 11
-    N_BLOCK                    go to state 69
-    N_ASSIGNMENT               go to state 70
-    N_IF_STATEMENT             go to state 71
-    N_WHILE_STATEMENT          go to state 72
-    N_FOR_STATEMENT            go to state 73
-
-
-State 47
-
-   54 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE T_IDENTIFIER •
-
-    $default  reduce using rule 54 (N_PARAMETER_DECLARATION_LIST)
-
-
-State 48
-
-   63 N_STATEMENT: N_STATEMENT error • ';'
-
-    ';'  shift, and go to state 74
-
-
-State 49
 
     2 N_CONSTANT_VALUE: T_INT_NUMBER •
 
     $default  reduce using rule 2 (N_CONSTANT_VALUE)
 
 
-State 50
+State 36
 
     4 N_CONSTANT_VALUE: T_CHAR_VALUE •
 
     $default  reduce using rule 4 (N_CONSTANT_VALUE)
 
 
-State 51
+State 37
 
     3 N_CONSTANT_VALUE: T_FLOAT_NUMBER •
 
     $default  reduce using rule 3 (N_CONSTANT_VALUE)
 
 
-State 52
+State 38
 
     5 N_CONSTANT_VALUE: T_BOOL_VALUE •
 
     $default  reduce using rule 5 (N_CONSTANT_VALUE)
 
 
-State 53
+State 39
 
     6 N_CONSTANT_VALUE: T_STRING_VALUE •
 
     $default  reduce using rule 6 (N_CONSTANT_VALUE)
 
 
-State 54
-
-   67 N_IF_STATEMENT: T_IF • '(' N_BOOL_EXPRESSION ')' N_BLOCK
-
-    '('  shift, and go to state 75
-
-
-State 55
-
-   68 N_WHILE_STATEMENT: T_WHILE • '(' N_BOOL_EXPRESSION ')' N_BLOCK
-
-    '('  shift, and go to state 76
-
-
-State 56
-
-   69 N_FOR_STATEMENT: T_FOR • '(' ',' ',' ')' N_BLOCK
-
-    '('  shift, and go to state 77
-
-
-State 57
+State 40
 
    10 N_NON_ARRAY_SYMBOL_ACCESS: T_IDENTIFIER •
-   22 N_MIXED_TYPE: T_IDENTIFIER •
 
-    T_CONST       reduce using rule 22 (N_MIXED_TYPE)
-    T_IDENTIFIER  reduce using rule 22 (N_MIXED_TYPE)
-    $default      reduce using rule 10 (N_NON_ARRAY_SYMBOL_ACCESS)
+    $default  reduce using rule 10 (N_NON_ARRAY_SYMBOL_ACCESS)
 
 
-State 58
+State 41
 
    28 N_EXPRESSION: '-' • N_EXPRESSION
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '-'             shift, and go to state 58
-    '('             shift, and go to state 59
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
 
-    N_CONSTANT_VALUE           go to state 61
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 79
-    N_EXPRESSION               go to state 80
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 47
+    N_EXPRESSION               go to state 57
 
 
-State 59
+State 42
 
    27 N_EXPRESSION: '(' • N_EXPRESSION ')'
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '-'             shift, and go to state 58
-    '('             shift, and go to state 59
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
 
-    N_CONSTANT_VALUE           go to state 61
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 79
-    N_EXPRESSION               go to state 81
-
-
-State 60
-
-   56 N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}' •
-
-    $default  reduce using rule 56 (N_BLOCK)
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 47
+    N_EXPRESSION               go to state 58
 
 
-State 61
+State 43
 
    29 N_EXPRESSION: N_CONSTANT_VALUE •
 
     $default  reduce using rule 29 (N_EXPRESSION)
 
 
-State 62
+State 44
 
     9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS • M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')'
    15 N_VARIABLE_ACCESS: N_SYMBOL_ACCESS •
@@ -844,183 +693,142 @@ State 62
     '('       reduce using rule 11 (M_PARAMETER_LOOKUP_SCOPE_CHANGE)
     $default  reduce using rule 15 (N_VARIABLE_ACCESS)
 
-    M_PARAMETER_LOOKUP_SCOPE_CHANGE  go to state 82
+    M_PARAMETER_LOOKUP_SCOPE_CHANGE  go to state 59
 
 
-State 63
+State 45
 
     7 N_SYMBOL_ACCESS: N_NON_ARRAY_SYMBOL_ACCESS •
    12 N_ARRAY_SYMBOL_ACCESS: N_NON_ARRAY_SYMBOL_ACCESS • N_ARRAY_SUBSCRIPT
 
-    '['  shift, and go to state 24
+    '['  shift, and go to state 25
 
     $default  reduce using rule 7 (N_SYMBOL_ACCESS)
 
-    N_ARRAY_SUBSCRIPT  go to state 83
+    N_ARRAY_SUBSCRIPT  go to state 60
 
 
-State 64
+State 46
 
     8 N_SYMBOL_ACCESS: N_ARRAY_SYMBOL_ACCESS •
 
     $default  reduce using rule 8 (N_SYMBOL_ACCESS)
 
 
-State 65
+State 47
 
    14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS • M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' N_SYMBOL_ACCESS
    30 N_EXPRESSION: N_VARIABLE_ACCESS •
-   66 N_ASSIGNMENT: N_VARIABLE_ACCESS • '=' N_EXPRESSION
-
-    '='  shift, and go to state 84
 
     '.'       reduce using rule 16 (M_CLASS_ACCESS_SCOPE_CHANGE)
     $default  reduce using rule 30 (N_EXPRESSION)
 
-    M_CLASS_ACCESS_SCOPE_CHANGE  go to state 85
+    M_CLASS_ACCESS_SCOPE_CHANGE  go to state 61
 
 
-State 66
-
-   42 N_VARIABLE_DECLARATION: N_MIXED_TYPE • T_IDENTIFIER
-   43                       | N_MIXED_TYPE • T_CONST T_IDENTIFIER
-   44                       | N_MIXED_TYPE • T_IDENTIFIER N_ARRAY_SUBSCRIPT
-   45                       | N_MIXED_TYPE • T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT
-
-    T_CONST       shift, and go to state 16
-    T_IDENTIFIER  shift, and go to state 86
-
-
-State 67
+State 48
 
    23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
    24             | N_EXPRESSION • '-' N_EXPRESSION
    25             | N_EXPRESSION • '*' N_EXPRESSION
    26             | N_EXPRESSION • '/' N_EXPRESSION
-   61 N_STATEMENT: N_STATEMENT N_EXPRESSION • ';'
+   47 N_VARIABLE_DEFINITION: N_MIXED_TYPE T_IDENTIFIER '=' N_EXPRESSION •
 
-    '-'  shift, and go to state 87
-    '+'  shift, and go to state 88
-    '*'  shift, and go to state 89
-    '/'  shift, and go to state 90
-    ';'  shift, and go to state 91
+    '-'  shift, and go to state 62
+    '+'  shift, and go to state 63
+    '*'  shift, and go to state 64
+    '/'  shift, and go to state 65
 
-
-State 68
-
-   62 N_STATEMENT: N_STATEMENT N_BLOCK_SCOPE_DECLARATION • ';'
-
-    ';'  shift, and go to state 92
+    $default  reduce using rule 47 (N_VARIABLE_DEFINITION)
 
 
-State 69
+State 49
 
-   64 N_STATEMENT: N_STATEMENT N_BLOCK •
+   49 N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER • ']' N_ARRAY_SUBSCRIPT
+   50                  | '[' T_INT_NUMBER • ']'
 
-    $default  reduce using rule 64 (N_STATEMENT)
-
-
-State 70
-
-   57 N_STATEMENT: N_STATEMENT N_ASSIGNMENT • ';'
-
-    ';'  shift, and go to state 93
+    ']'  shift, and go to state 66
 
 
-State 71
+State 50
 
-   58 N_STATEMENT: N_STATEMENT N_IF_STATEMENT •
+   36 N_DECLARATION: N_DECLARATION • N_FUNCTION_DECLARATION
+   37              | N_DECLARATION • N_BLOCK_SCOPE_DECLARATION ';'
+   38              | N_DECLARATION • error ';'
+   51 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION • '}'
 
-    $default  reduce using rule 58 (N_STATEMENT)
+    error         shift, and go to state 4
+    T_CLASS       shift, and go to state 5
+    T_TYPE        shift, and go to state 31
+    T_IDENTIFIER  shift, and go to state 7
+    '}'           shift, and go to state 67
 
-
-State 72
-
-   59 N_STATEMENT: N_STATEMENT N_WHILE_STATEMENT •
-
-    $default  reduce using rule 59 (N_STATEMENT)
-
-
-State 73
-
-   60 N_STATEMENT: N_STATEMENT N_FOR_STATEMENT •
-
-    $default  reduce using rule 60 (N_STATEMENT)
-
-
-State 74
-
-   63 N_STATEMENT: N_STATEMENT error ';' •
-
-    $default  reduce using rule 63 (N_STATEMENT)
+    N_MIXED_TYPE               go to state 8
+    N_BLOCK_SCOPE_DECLARATION  go to state 9
+    N_VARIABLE_DECLARATION     go to state 10
+    N_VARIABLE_DEFINITION      go to state 11
+    N_CLASS_DECLARATION        go to state 12
+    N_FUNCTION_DECLARATION     go to state 13
 
 
-State 75
+State 51
 
-   67 N_IF_STATEMENT: T_IF '(' • N_BOOL_EXPRESSION ')' N_BLOCK
+   62 N_BLOCK: '{' • M_BLOCK_BEGIN N_STATEMENT '}'
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '!'             shift, and go to state 94
+    $default  reduce using rule 52 (M_BLOCK_BEGIN)
 
-    N_CONSTANT_VALUE           go to state 95
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 96
-    N_BOOL_EXPRESSION          go to state 97
+    M_BLOCK_BEGIN  go to state 68
 
 
-State 76
+State 52
 
-   68 N_WHILE_STATEMENT: T_WHILE '(' • N_BOOL_EXPRESSION ')' N_BLOCK
+    1 N_START: N_DECLARATION T_TYPE T_MAIN_IDENTIFIER '(' ')' N_BLOCK •
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '!'             shift, and go to state 94
-
-    N_CONSTANT_VALUE           go to state 95
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 96
-    N_BOOL_EXPRESSION          go to state 98
+    $default  reduce using rule 1 (N_START)
 
 
-State 77
+State 53
 
-   69 N_FOR_STATEMENT: T_FOR '(' • ',' ',' ')' N_BLOCK
+   23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+   24             | N_EXPRESSION • '-' N_EXPRESSION
+   25             | N_EXPRESSION • '*' N_EXPRESSION
+   26             | N_EXPRESSION • '/' N_EXPRESSION
+   48 N_VARIABLE_DEFINITION: N_MIXED_TYPE T_CONST T_IDENTIFIER '=' N_EXPRESSION •
 
-    ','  shift, and go to state 99
+    '-'  shift, and go to state 62
+    '+'  shift, and go to state 63
+    '*'  shift, and go to state 64
+    '/'  shift, and go to state 65
 
-
-State 78
-
-   10 N_NON_ARRAY_SYMBOL_ACCESS: T_IDENTIFIER •
-
-    $default  reduce using rule 10 (N_NON_ARRAY_SYMBOL_ACCESS)
-
-
-State 79
-
-   14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS • M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' N_SYMBOL_ACCESS
-   30 N_EXPRESSION: N_VARIABLE_ACCESS •
-
-    '.'       reduce using rule 16 (M_CLASS_ACCESS_SCOPE_CHANGE)
-    $default  reduce using rule 30 (N_EXPRESSION)
-
-    M_CLASS_ACCESS_SCOPE_CHANGE  go to state 85
+    $default  reduce using rule 48 (N_VARIABLE_DEFINITION)
 
 
-State 80
+State 54
+
+   61 N_PARAMETER_DECLARATION_LIST: N_MIXED_TYPE T_IDENTIFIER •
+
+    $default  reduce using rule 61 (N_PARAMETER_DECLARATION_LIST)
+
+
+State 55
+
+   54 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN • ')' $@2 N_FUNCTION_BLOCK
+   55                       | N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN • ')'
+
+    ')'  shift, and go to state 69
+
+
+State 56
+
+   60 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' • N_MIXED_TYPE T_IDENTIFIER
+
+    T_TYPE        shift, and go to state 31
+    T_IDENTIFIER  shift, and go to state 7
+
+    N_MIXED_TYPE  go to state 70
+
+
+State 57
 
    23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
    24             | N_EXPRESSION • '-' N_EXPRESSION
@@ -1031,7 +839,7 @@ State 80
     $default  reduce using rule 28 (N_EXPRESSION)
 
 
-State 81
+State 58
 
    23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
    24             | N_EXPRESSION • '-' N_EXPRESSION
@@ -1039,287 +847,196 @@ State 81
    26             | N_EXPRESSION • '/' N_EXPRESSION
    27             | '(' N_EXPRESSION • ')'
 
-    '-'  shift, and go to state 87
-    '+'  shift, and go to state 88
-    '*'  shift, and go to state 89
-    '/'  shift, and go to state 90
-    ')'  shift, and go to state 100
+    '-'  shift, and go to state 62
+    '+'  shift, and go to state 63
+    '*'  shift, and go to state 64
+    '/'  shift, and go to state 65
+    ')'  shift, and go to state 71
 
 
-State 82
+State 59
 
     9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE • '(' N_PARAMETER ')'
 
-    '('  shift, and go to state 101
+    '('  shift, and go to state 72
 
 
-State 83
+State 60
 
    12 N_ARRAY_SYMBOL_ACCESS: N_NON_ARRAY_SYMBOL_ACCESS N_ARRAY_SUBSCRIPT •
 
     $default  reduce using rule 12 (N_ARRAY_SYMBOL_ACCESS)
 
 
-State 84
-
-   66 N_ASSIGNMENT: N_VARIABLE_ACCESS '=' • N_EXPRESSION
-
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '-'             shift, and go to state 58
-    '('             shift, and go to state 59
-
-    N_CONSTANT_VALUE           go to state 61
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 79
-    N_EXPRESSION               go to state 102
-
-
-State 85
+State 61
 
    14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE • $@1 '.' N_SYMBOL_ACCESS
 
     $default  reduce using rule 13 ($@1)
 
-    $@1  go to state 103
+    $@1  go to state 73
 
 
-State 86
-
-   42 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER •
-   44                       | N_MIXED_TYPE T_IDENTIFIER • N_ARRAY_SUBSCRIPT
-
-    '['  shift, and go to state 24
-
-    $default  reduce using rule 42 (N_VARIABLE_DECLARATION)
-
-    N_ARRAY_SUBSCRIPT  go to state 25
-
-
-State 87
+State 62
 
    24 N_EXPRESSION: N_EXPRESSION '-' • N_EXPRESSION
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '-'             shift, and go to state 58
-    '('             shift, and go to state 59
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
 
-    N_CONSTANT_VALUE           go to state 61
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 79
-    N_EXPRESSION               go to state 104
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 47
+    N_EXPRESSION               go to state 74
 
 
-State 88
+State 63
 
    23 N_EXPRESSION: N_EXPRESSION '+' • N_EXPRESSION
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '-'             shift, and go to state 58
-    '('             shift, and go to state 59
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
 
-    N_CONSTANT_VALUE           go to state 61
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 79
-    N_EXPRESSION               go to state 105
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 47
+    N_EXPRESSION               go to state 75
 
 
-State 89
+State 64
 
    25 N_EXPRESSION: N_EXPRESSION '*' • N_EXPRESSION
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '-'             shift, and go to state 58
-    '('             shift, and go to state 59
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
 
-    N_CONSTANT_VALUE           go to state 61
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 79
-    N_EXPRESSION               go to state 106
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 47
+    N_EXPRESSION               go to state 76
 
 
-State 90
+State 65
 
    26 N_EXPRESSION: N_EXPRESSION '/' • N_EXPRESSION
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '-'             shift, and go to state 58
-    '('             shift, and go to state 59
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
 
-    N_CONSTANT_VALUE           go to state 61
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 79
-    N_EXPRESSION               go to state 107
-
-
-State 91
-
-   61 N_STATEMENT: N_STATEMENT N_EXPRESSION ';' •
-
-    $default  reduce using rule 61 (N_STATEMENT)
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 47
+    N_EXPRESSION               go to state 77
 
 
-State 92
+State 66
 
-   62 N_STATEMENT: N_STATEMENT N_BLOCK_SCOPE_DECLARATION ';' •
+   49 N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']' • N_ARRAY_SUBSCRIPT
+   50                  | '[' T_INT_NUMBER ']' •
 
-    $default  reduce using rule 62 (N_STATEMENT)
+    '['  shift, and go to state 25
 
+    $default  reduce using rule 50 (N_ARRAY_SUBSCRIPT)
 
-State 93
-
-   57 N_STATEMENT: N_STATEMENT N_ASSIGNMENT ';' •
-
-    $default  reduce using rule 57 (N_STATEMENT)
+    N_ARRAY_SUBSCRIPT  go to state 78
 
 
-State 94
+State 67
 
-   33 N_BOOL_EXPRESSION: '!' • N_BOOL_EXPRESSION
+   51 N_CLASS_DECLARATION: T_CLASS T_IDENTIFIER '{' M_BLOCK_BEGIN N_DECLARATION '}' •
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '!'             shift, and go to state 94
-
-    N_CONSTANT_VALUE           go to state 95
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 96
-    N_BOOL_EXPRESSION          go to state 108
+    $default  reduce using rule 51 (N_CLASS_DECLARATION)
 
 
-State 95
+State 68
 
-   34 N_BOOL_EXPRESSION: N_CONSTANT_VALUE •
+   62 N_BLOCK: '{' M_BLOCK_BEGIN • N_STATEMENT '}'
 
-    $default  reduce using rule 34 (N_BOOL_EXPRESSION)
+    $default  reduce using rule 71 (N_STATEMENT)
 
-
-State 96
-
-   14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS • M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' N_SYMBOL_ACCESS
-   35 N_BOOL_EXPRESSION: N_VARIABLE_ACCESS •
-
-    '.'       reduce using rule 16 (M_CLASS_ACCESS_SCOPE_CHANGE)
-    $default  reduce using rule 35 (N_BOOL_EXPRESSION)
-
-    M_CLASS_ACCESS_SCOPE_CHANGE  go to state 85
+    N_STATEMENT  go to state 79
 
 
-State 97
+State 69
 
-   31 N_BOOL_EXPRESSION: N_BOOL_EXPRESSION • T_BAND N_BOOL_EXPRESSION
-   32                  | N_BOOL_EXPRESSION • T_BOR N_BOOL_EXPRESSION
-   67 N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION • ')' N_BLOCK
+   54 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')' • $@2 N_FUNCTION_BLOCK
+   55                       | N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')' •
 
-    T_BAND  shift, and go to state 109
-    T_BOR   shift, and go to state 110
-    ')'     shift, and go to state 111
+    '{'       reduce using rule 53 ($@2)
+    $default  reduce using rule 55 (N_FUNCTION_DECLARATION)
 
-
-State 98
-
-   31 N_BOOL_EXPRESSION: N_BOOL_EXPRESSION • T_BAND N_BOOL_EXPRESSION
-   32                  | N_BOOL_EXPRESSION • T_BOR N_BOOL_EXPRESSION
-   68 N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION • ')' N_BLOCK
-
-    T_BAND  shift, and go to state 109
-    T_BOR   shift, and go to state 110
-    ')'     shift, and go to state 112
+    $@2  go to state 80
 
 
-State 99
+State 70
 
-   69 N_FOR_STATEMENT: T_FOR '(' ',' • ',' ')' N_BLOCK
+   60 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE • T_IDENTIFIER
 
-    ','  shift, and go to state 113
+    T_IDENTIFIER  shift, and go to state 81
 
 
-State 100
+State 71
 
    27 N_EXPRESSION: '(' N_EXPRESSION ')' •
 
     $default  reduce using rule 27 (N_EXPRESSION)
 
 
-State 101
+State 72
 
     9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' • N_PARAMETER ')'
 
-    T_IDENTIFIER  shift, and go to state 78
+    T_IDENTIFIER  shift, and go to state 40
 
     $default  reduce using rule 18 (N_PARAMETER)
 
-    N_SYMBOL_ACCESS            go to state 114
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_PARAMETER                go to state 115
-    N_PARAMETER_LIST           go to state 116
+    N_SYMBOL_ACCESS            go to state 82
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_PARAMETER                go to state 83
+    N_PARAMETER_LIST           go to state 84
 
 
-State 102
-
-   23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
-   24             | N_EXPRESSION • '-' N_EXPRESSION
-   25             | N_EXPRESSION • '*' N_EXPRESSION
-   26             | N_EXPRESSION • '/' N_EXPRESSION
-   66 N_ASSIGNMENT: N_VARIABLE_ACCESS '=' N_EXPRESSION •
-
-    '-'  shift, and go to state 87
-    '+'  shift, and go to state 88
-    '*'  shift, and go to state 89
-    '/'  shift, and go to state 90
-
-    $default  reduce using rule 66 (N_ASSIGNMENT)
-
-
-State 103
+State 73
 
    14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE $@1 • '.' N_SYMBOL_ACCESS
 
-    '.'  shift, and go to state 117
+    '.'  shift, and go to state 85
 
 
-State 104
+State 74
 
    23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
    24             | N_EXPRESSION • '-' N_EXPRESSION
@@ -1327,13 +1044,13 @@ State 104
    25             | N_EXPRESSION • '*' N_EXPRESSION
    26             | N_EXPRESSION • '/' N_EXPRESSION
 
-    '*'  shift, and go to state 89
-    '/'  shift, and go to state 90
+    '*'  shift, and go to state 64
+    '/'  shift, and go to state 65
 
     $default  reduce using rule 24 (N_EXPRESSION)
 
 
-State 105
+State 75
 
    23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
    23             | N_EXPRESSION '+' N_EXPRESSION •
@@ -1341,13 +1058,13 @@ State 105
    25             | N_EXPRESSION • '*' N_EXPRESSION
    26             | N_EXPRESSION • '/' N_EXPRESSION
 
-    '*'  shift, and go to state 89
-    '/'  shift, and go to state 90
+    '*'  shift, and go to state 64
+    '/'  shift, and go to state 65
 
     $default  reduce using rule 23 (N_EXPRESSION)
 
 
-State 106
+State 76
 
    23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
    24             | N_EXPRESSION • '-' N_EXPRESSION
@@ -1358,7 +1075,7 @@ State 106
     $default  reduce using rule 25 (N_EXPRESSION)
 
 
-State 107
+State 77
 
    23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
    24             | N_EXPRESSION • '-' N_EXPRESSION
@@ -1369,7 +1086,548 @@ State 107
     $default  reduce using rule 26 (N_EXPRESSION)
 
 
+State 78
+
+   49 N_ARRAY_SUBSCRIPT: '[' T_INT_NUMBER ']' N_ARRAY_SUBSCRIPT •
+
+    $default  reduce using rule 49 (N_ARRAY_SUBSCRIPT)
+
+
+State 79
+
+   62 N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT • '}'
+   63 N_STATEMENT: N_STATEMENT • N_ASSIGNMENT ';'
+   64            | N_STATEMENT • N_IF_STATEMENT
+   65            | N_STATEMENT • N_WHILE_STATEMENT
+   66            | N_STATEMENT • N_FOR_STATEMENT
+   67            | N_STATEMENT • N_EXPRESSION ';'
+   68            | N_STATEMENT • N_BLOCK_SCOPE_DECLARATION ';'
+   69            | N_STATEMENT • error ';'
+   70            | N_STATEMENT • N_BLOCK
+
+    error           shift, and go to state 86
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_CLASS         shift, and go to state 5
+    T_IF            shift, and go to state 87
+    T_WHILE         shift, and go to state 88
+    T_FOR           shift, and go to state 89
+    T_TYPE          shift, and go to state 31
+    T_IDENTIFIER    shift, and go to state 90
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
+    '{'             shift, and go to state 51
+    '}'             shift, and go to state 91
+
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 92
+    N_MIXED_TYPE               go to state 93
+    N_EXPRESSION               go to state 94
+    N_BLOCK_SCOPE_DECLARATION  go to state 95
+    N_VARIABLE_DECLARATION     go to state 10
+    N_VARIABLE_DEFINITION      go to state 11
+    N_CLASS_DECLARATION        go to state 12
+    N_BLOCK                    go to state 96
+    N_ASSIGNMENT               go to state 97
+    N_IF_STATEMENT             go to state 98
+    N_WHILE_STATEMENT          go to state 99
+    N_FOR_STATEMENT            go to state 100
+
+
+State 80
+
+   54 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')' $@2 • N_FUNCTION_BLOCK
+
+    '{'  shift, and go to state 101
+
+    N_FUNCTION_BLOCK  go to state 102
+
+
+State 81
+
+   60 N_PARAMETER_DECLARATION_LIST: N_PARAMETER_DECLARATION_LIST ',' N_MIXED_TYPE T_IDENTIFIER •
+
+    $default  reduce using rule 60 (N_PARAMETER_DECLARATION_LIST)
+
+
+State 82
+
+    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS • M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')'
+   20 N_PARAMETER_LIST: N_SYMBOL_ACCESS •
+
+    '('       reduce using rule 11 (M_PARAMETER_LOOKUP_SCOPE_CHANGE)
+    $default  reduce using rule 20 (N_PARAMETER_LIST)
+
+    M_PARAMETER_LOOKUP_SCOPE_CHANGE  go to state 59
+
+
+State 83
+
+    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER • ')'
+
+    ')'  shift, and go to state 103
+
+
+State 84
+
+   17 N_PARAMETER: N_PARAMETER_LIST •
+   19 N_PARAMETER_LIST: N_PARAMETER_LIST • ',' N_SYMBOL_ACCESS
+
+    ','  shift, and go to state 104
+
+    $default  reduce using rule 17 (N_PARAMETER)
+
+
+State 85
+
+   14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' • N_SYMBOL_ACCESS
+
+    T_IDENTIFIER  shift, and go to state 40
+
+    N_SYMBOL_ACCESS            go to state 105
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+
+
+State 86
+
+   69 N_STATEMENT: N_STATEMENT error • ';'
+
+    ';'  shift, and go to state 106
+
+
+State 87
+
+   73 N_IF_STATEMENT: T_IF • '(' N_BOOL_EXPRESSION ')' N_BLOCK
+
+    '('  shift, and go to state 107
+
+
+State 88
+
+   74 N_WHILE_STATEMENT: T_WHILE • '(' N_BOOL_EXPRESSION ')' N_BLOCK
+
+    '('  shift, and go to state 108
+
+
+State 89
+
+   75 N_FOR_STATEMENT: T_FOR • '(' ',' ',' ')' N_BLOCK
+
+    '('  shift, and go to state 109
+
+
+State 90
+
+   10 N_NON_ARRAY_SYMBOL_ACCESS: T_IDENTIFIER •
+   22 N_MIXED_TYPE: T_IDENTIFIER •
+
+    T_CONST       reduce using rule 22 (N_MIXED_TYPE)
+    T_IDENTIFIER  reduce using rule 22 (N_MIXED_TYPE)
+    $default      reduce using rule 10 (N_NON_ARRAY_SYMBOL_ACCESS)
+
+
+State 91
+
+   62 N_BLOCK: '{' M_BLOCK_BEGIN N_STATEMENT '}' •
+
+    $default  reduce using rule 62 (N_BLOCK)
+
+
+State 92
+
+   14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS • M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' N_SYMBOL_ACCESS
+   30 N_EXPRESSION: N_VARIABLE_ACCESS •
+   72 N_ASSIGNMENT: N_VARIABLE_ACCESS • '=' N_EXPRESSION
+
+    '='  shift, and go to state 110
+
+    '.'       reduce using rule 16 (M_CLASS_ACCESS_SCOPE_CHANGE)
+    $default  reduce using rule 30 (N_EXPRESSION)
+
+    M_CLASS_ACCESS_SCOPE_CHANGE  go to state 61
+
+
+State 93
+
+   43 N_VARIABLE_DECLARATION: N_MIXED_TYPE • T_IDENTIFIER
+   44                       | N_MIXED_TYPE • T_CONST T_IDENTIFIER
+   45                       | N_MIXED_TYPE • T_IDENTIFIER N_ARRAY_SUBSCRIPT
+   46                       | N_MIXED_TYPE • T_CONST T_IDENTIFIER N_ARRAY_SUBSCRIPT
+   47 N_VARIABLE_DEFINITION: N_MIXED_TYPE • T_IDENTIFIER '=' N_EXPRESSION
+   48                      | N_MIXED_TYPE • T_CONST T_IDENTIFIER '=' N_EXPRESSION
+
+    T_CONST       shift, and go to state 17
+    T_IDENTIFIER  shift, and go to state 111
+
+
+State 94
+
+   23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+   24             | N_EXPRESSION • '-' N_EXPRESSION
+   25             | N_EXPRESSION • '*' N_EXPRESSION
+   26             | N_EXPRESSION • '/' N_EXPRESSION
+   67 N_STATEMENT: N_STATEMENT N_EXPRESSION • ';'
+
+    '-'  shift, and go to state 62
+    '+'  shift, and go to state 63
+    '*'  shift, and go to state 64
+    '/'  shift, and go to state 65
+    ';'  shift, and go to state 112
+
+
+State 95
+
+   68 N_STATEMENT: N_STATEMENT N_BLOCK_SCOPE_DECLARATION • ';'
+
+    ';'  shift, and go to state 113
+
+
+State 96
+
+   70 N_STATEMENT: N_STATEMENT N_BLOCK •
+
+    $default  reduce using rule 70 (N_STATEMENT)
+
+
+State 97
+
+   63 N_STATEMENT: N_STATEMENT N_ASSIGNMENT • ';'
+
+    ';'  shift, and go to state 114
+
+
+State 98
+
+   64 N_STATEMENT: N_STATEMENT N_IF_STATEMENT •
+
+    $default  reduce using rule 64 (N_STATEMENT)
+
+
+State 99
+
+   65 N_STATEMENT: N_STATEMENT N_WHILE_STATEMENT •
+
+    $default  reduce using rule 65 (N_STATEMENT)
+
+
+State 100
+
+   66 N_STATEMENT: N_STATEMENT N_FOR_STATEMENT •
+
+    $default  reduce using rule 66 (N_STATEMENT)
+
+
+State 101
+
+   57 N_FUNCTION_BLOCK: '{' • N_STATEMENT '}'
+
+    $default  reduce using rule 71 (N_STATEMENT)
+
+    N_STATEMENT  go to state 115
+
+
+State 102
+
+   54 N_FUNCTION_DECLARATION: N_MIXED_TYPE T_IDENTIFIER '(' N_PARAMETER_DECLARATION M_FUNCTION_DECLARATION_BLOCK_BEGIN ')' $@2 N_FUNCTION_BLOCK •
+
+    $default  reduce using rule 54 (N_FUNCTION_DECLARATION)
+
+
+State 103
+
+    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')' •
+
+    $default  reduce using rule 9 (N_NON_ARRAY_SYMBOL_ACCESS)
+
+
+State 104
+
+   19 N_PARAMETER_LIST: N_PARAMETER_LIST ',' • N_SYMBOL_ACCESS
+
+    T_IDENTIFIER  shift, and go to state 40
+
+    N_SYMBOL_ACCESS            go to state 116
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+
+
+State 105
+
+    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS • M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')'
+   14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' N_SYMBOL_ACCESS •
+
+    '('       reduce using rule 11 (M_PARAMETER_LOOKUP_SCOPE_CHANGE)
+    $default  reduce using rule 14 (N_VARIABLE_ACCESS)
+
+    M_PARAMETER_LOOKUP_SCOPE_CHANGE  go to state 59
+
+
+State 106
+
+   69 N_STATEMENT: N_STATEMENT error ';' •
+
+    $default  reduce using rule 69 (N_STATEMENT)
+
+
+State 107
+
+   73 N_IF_STATEMENT: T_IF '(' • N_BOOL_EXPRESSION ')' N_BLOCK
+
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '!'             shift, and go to state 117
+
+    N_CONSTANT_VALUE           go to state 118
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 119
+    N_BOOL_EXPRESSION          go to state 120
+
+
 State 108
+
+   74 N_WHILE_STATEMENT: T_WHILE '(' • N_BOOL_EXPRESSION ')' N_BLOCK
+
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '!'             shift, and go to state 117
+
+    N_CONSTANT_VALUE           go to state 118
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 119
+    N_BOOL_EXPRESSION          go to state 121
+
+
+State 109
+
+   75 N_FOR_STATEMENT: T_FOR '(' • ',' ',' ')' N_BLOCK
+
+    ','  shift, and go to state 122
+
+
+State 110
+
+   72 N_ASSIGNMENT: N_VARIABLE_ACCESS '=' • N_EXPRESSION
+
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
+
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 47
+    N_EXPRESSION               go to state 123
+
+
+State 111
+
+   43 N_VARIABLE_DECLARATION: N_MIXED_TYPE T_IDENTIFIER •
+   45                       | N_MIXED_TYPE T_IDENTIFIER • N_ARRAY_SUBSCRIPT
+   47 N_VARIABLE_DEFINITION: N_MIXED_TYPE T_IDENTIFIER • '=' N_EXPRESSION
+
+    '='  shift, and go to state 24
+    '['  shift, and go to state 25
+
+    $default  reduce using rule 43 (N_VARIABLE_DECLARATION)
+
+    N_ARRAY_SUBSCRIPT  go to state 26
+
+
+State 112
+
+   67 N_STATEMENT: N_STATEMENT N_EXPRESSION ';' •
+
+    $default  reduce using rule 67 (N_STATEMENT)
+
+
+State 113
+
+   68 N_STATEMENT: N_STATEMENT N_BLOCK_SCOPE_DECLARATION ';' •
+
+    $default  reduce using rule 68 (N_STATEMENT)
+
+
+State 114
+
+   63 N_STATEMENT: N_STATEMENT N_ASSIGNMENT ';' •
+
+    $default  reduce using rule 63 (N_STATEMENT)
+
+
+State 115
+
+   57 N_FUNCTION_BLOCK: '{' N_STATEMENT • '}'
+   63 N_STATEMENT: N_STATEMENT • N_ASSIGNMENT ';'
+   64            | N_STATEMENT • N_IF_STATEMENT
+   65            | N_STATEMENT • N_WHILE_STATEMENT
+   66            | N_STATEMENT • N_FOR_STATEMENT
+   67            | N_STATEMENT • N_EXPRESSION ';'
+   68            | N_STATEMENT • N_BLOCK_SCOPE_DECLARATION ';'
+   69            | N_STATEMENT • error ';'
+   70            | N_STATEMENT • N_BLOCK
+
+    error           shift, and go to state 86
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_CLASS         shift, and go to state 5
+    T_IF            shift, and go to state 87
+    T_WHILE         shift, and go to state 88
+    T_FOR           shift, and go to state 89
+    T_TYPE          shift, and go to state 31
+    T_IDENTIFIER    shift, and go to state 90
+    '-'             shift, and go to state 41
+    '('             shift, and go to state 42
+    '{'             shift, and go to state 51
+    '}'             shift, and go to state 124
+
+    N_CONSTANT_VALUE           go to state 43
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 92
+    N_MIXED_TYPE               go to state 93
+    N_EXPRESSION               go to state 94
+    N_BLOCK_SCOPE_DECLARATION  go to state 95
+    N_VARIABLE_DECLARATION     go to state 10
+    N_VARIABLE_DEFINITION      go to state 11
+    N_CLASS_DECLARATION        go to state 12
+    N_BLOCK                    go to state 96
+    N_ASSIGNMENT               go to state 97
+    N_IF_STATEMENT             go to state 98
+    N_WHILE_STATEMENT          go to state 99
+    N_FOR_STATEMENT            go to state 100
+
+
+State 116
+
+    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS • M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')'
+   19 N_PARAMETER_LIST: N_PARAMETER_LIST ',' N_SYMBOL_ACCESS •
+
+    '('       reduce using rule 11 (M_PARAMETER_LOOKUP_SCOPE_CHANGE)
+    $default  reduce using rule 19 (N_PARAMETER_LIST)
+
+    M_PARAMETER_LOOKUP_SCOPE_CHANGE  go to state 59
+
+
+State 117
+
+   33 N_BOOL_EXPRESSION: '!' • N_BOOL_EXPRESSION
+
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '!'             shift, and go to state 117
+
+    N_CONSTANT_VALUE           go to state 118
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 119
+    N_BOOL_EXPRESSION          go to state 125
+
+
+State 118
+
+   34 N_BOOL_EXPRESSION: N_CONSTANT_VALUE •
+
+    $default  reduce using rule 34 (N_BOOL_EXPRESSION)
+
+
+State 119
+
+   14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS • M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' N_SYMBOL_ACCESS
+   35 N_BOOL_EXPRESSION: N_VARIABLE_ACCESS •
+
+    '.'       reduce using rule 16 (M_CLASS_ACCESS_SCOPE_CHANGE)
+    $default  reduce using rule 35 (N_BOOL_EXPRESSION)
+
+    M_CLASS_ACCESS_SCOPE_CHANGE  go to state 61
+
+
+State 120
+
+   31 N_BOOL_EXPRESSION: N_BOOL_EXPRESSION • T_BAND N_BOOL_EXPRESSION
+   32                  | N_BOOL_EXPRESSION • T_BOR N_BOOL_EXPRESSION
+   73 N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION • ')' N_BLOCK
+
+    T_BAND  shift, and go to state 126
+    T_BOR   shift, and go to state 127
+    ')'     shift, and go to state 128
+
+
+State 121
+
+   31 N_BOOL_EXPRESSION: N_BOOL_EXPRESSION • T_BAND N_BOOL_EXPRESSION
+   32                  | N_BOOL_EXPRESSION • T_BOR N_BOOL_EXPRESSION
+   74 N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION • ')' N_BLOCK
+
+    T_BAND  shift, and go to state 126
+    T_BOR   shift, and go to state 127
+    ')'     shift, and go to state 129
+
+
+State 122
+
+   75 N_FOR_STATEMENT: T_FOR '(' ',' • ',' ')' N_BLOCK
+
+    ','  shift, and go to state 130
+
+
+State 123
+
+   23 N_EXPRESSION: N_EXPRESSION • '+' N_EXPRESSION
+   24             | N_EXPRESSION • '-' N_EXPRESSION
+   25             | N_EXPRESSION • '*' N_EXPRESSION
+   26             | N_EXPRESSION • '/' N_EXPRESSION
+   72 N_ASSIGNMENT: N_VARIABLE_ACCESS '=' N_EXPRESSION •
+
+    '-'  shift, and go to state 62
+    '+'  shift, and go to state 63
+    '*'  shift, and go to state 64
+    '/'  shift, and go to state 65
+
+    $default  reduce using rule 72 (N_ASSIGNMENT)
+
+
+State 124
+
+   57 N_FUNCTION_BLOCK: '{' N_STATEMENT '}' •
+
+    $default  reduce using rule 57 (N_FUNCTION_BLOCK)
+
+
+State 125
 
    31 N_BOOL_EXPRESSION: N_BOOL_EXPRESSION • T_BAND N_BOOL_EXPRESSION
    32                  | N_BOOL_EXPRESSION • T_BOR N_BOOL_EXPRESSION
@@ -1378,122 +1636,83 @@ State 108
     $default  reduce using rule 33 (N_BOOL_EXPRESSION)
 
 
-State 109
+State 126
 
    31 N_BOOL_EXPRESSION: N_BOOL_EXPRESSION T_BAND • N_BOOL_EXPRESSION
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '!'             shift, and go to state 94
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '!'             shift, and go to state 117
 
-    N_CONSTANT_VALUE           go to state 95
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 96
-    N_BOOL_EXPRESSION          go to state 118
+    N_CONSTANT_VALUE           go to state 118
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 119
+    N_BOOL_EXPRESSION          go to state 131
 
 
-State 110
+State 127
 
    32 N_BOOL_EXPRESSION: N_BOOL_EXPRESSION T_BOR • N_BOOL_EXPRESSION
 
-    T_INT_NUMBER    shift, and go to state 49
-    T_CHAR_VALUE    shift, and go to state 50
-    T_FLOAT_NUMBER  shift, and go to state 51
-    T_BOOL_VALUE    shift, and go to state 52
-    T_STRING_VALUE  shift, and go to state 53
-    T_IDENTIFIER    shift, and go to state 78
-    '!'             shift, and go to state 94
+    T_INT_NUMBER    shift, and go to state 35
+    T_CHAR_VALUE    shift, and go to state 36
+    T_FLOAT_NUMBER  shift, and go to state 37
+    T_BOOL_VALUE    shift, and go to state 38
+    T_STRING_VALUE  shift, and go to state 39
+    T_IDENTIFIER    shift, and go to state 40
+    '!'             shift, and go to state 117
 
-    N_CONSTANT_VALUE           go to state 95
-    N_SYMBOL_ACCESS            go to state 62
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-    N_VARIABLE_ACCESS          go to state 96
-    N_BOOL_EXPRESSION          go to state 119
-
-
-State 111
-
-   67 N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION ')' • N_BLOCK
-
-    '{'  shift, and go to state 35
-
-    N_BLOCK  go to state 120
+    N_CONSTANT_VALUE           go to state 118
+    N_SYMBOL_ACCESS            go to state 44
+    N_NON_ARRAY_SYMBOL_ACCESS  go to state 45
+    N_ARRAY_SYMBOL_ACCESS      go to state 46
+    N_VARIABLE_ACCESS          go to state 119
+    N_BOOL_EXPRESSION          go to state 132
 
 
-State 112
+State 128
 
-   68 N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION ')' • N_BLOCK
+   73 N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION ')' • N_BLOCK
 
-    '{'  shift, and go to state 35
+    '{'  shift, and go to state 51
 
-    N_BLOCK  go to state 121
-
-
-State 113
-
-   69 N_FOR_STATEMENT: T_FOR '(' ',' ',' • ')' N_BLOCK
-
-    ')'  shift, and go to state 122
+    N_BLOCK  go to state 133
 
 
-State 114
+State 129
 
-    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS • M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')'
-   20 N_PARAMETER_LIST: N_SYMBOL_ACCESS •
+   74 N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION ')' • N_BLOCK
 
-    '('       reduce using rule 11 (M_PARAMETER_LOOKUP_SCOPE_CHANGE)
-    $default  reduce using rule 20 (N_PARAMETER_LIST)
+    '{'  shift, and go to state 51
 
-    M_PARAMETER_LOOKUP_SCOPE_CHANGE  go to state 82
+    N_BLOCK  go to state 134
 
 
-State 115
+State 130
 
-    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER • ')'
+   75 N_FOR_STATEMENT: T_FOR '(' ',' ',' • ')' N_BLOCK
 
-    ')'  shift, and go to state 123
-
-
-State 116
-
-   17 N_PARAMETER: N_PARAMETER_LIST •
-   19 N_PARAMETER_LIST: N_PARAMETER_LIST • ',' N_SYMBOL_ACCESS
-
-    ','  shift, and go to state 124
-
-    $default  reduce using rule 17 (N_PARAMETER)
+    ')'  shift, and go to state 135
 
 
-State 117
-
-   14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' • N_SYMBOL_ACCESS
-
-    T_IDENTIFIER  shift, and go to state 78
-
-    N_SYMBOL_ACCESS            go to state 125
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
-
-
-State 118
+State 131
 
    31 N_BOOL_EXPRESSION: N_BOOL_EXPRESSION • T_BAND N_BOOL_EXPRESSION
    31                  | N_BOOL_EXPRESSION T_BAND N_BOOL_EXPRESSION •
    32                  | N_BOOL_EXPRESSION • T_BOR N_BOOL_EXPRESSION
 
-    T_BOR  shift, and go to state 110
+    T_BOR  shift, and go to state 127
 
     $default  reduce using rule 31 (N_BOOL_EXPRESSION)
 
 
-State 119
+State 132
 
    31 N_BOOL_EXPRESSION: N_BOOL_EXPRESSION • T_BAND N_BOOL_EXPRESSION
    32                  | N_BOOL_EXPRESSION • T_BOR N_BOOL_EXPRESSION
@@ -1502,71 +1721,31 @@ State 119
     $default  reduce using rule 32 (N_BOOL_EXPRESSION)
 
 
-State 120
+State 133
 
-   67 N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION ')' N_BLOCK •
+   73 N_IF_STATEMENT: T_IF '(' N_BOOL_EXPRESSION ')' N_BLOCK •
 
-    $default  reduce using rule 67 (N_IF_STATEMENT)
-
-
-State 121
-
-   68 N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION ')' N_BLOCK •
-
-    $default  reduce using rule 68 (N_WHILE_STATEMENT)
+    $default  reduce using rule 73 (N_IF_STATEMENT)
 
 
-State 122
+State 134
 
-   69 N_FOR_STATEMENT: T_FOR '(' ',' ',' ')' • N_BLOCK
+   74 N_WHILE_STATEMENT: T_WHILE '(' N_BOOL_EXPRESSION ')' N_BLOCK •
 
-    '{'  shift, and go to state 35
-
-    N_BLOCK  go to state 126
+    $default  reduce using rule 74 (N_WHILE_STATEMENT)
 
 
-State 123
+State 135
 
-    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')' •
+   75 N_FOR_STATEMENT: T_FOR '(' ',' ',' ')' • N_BLOCK
 
-    $default  reduce using rule 9 (N_NON_ARRAY_SYMBOL_ACCESS)
+    '{'  shift, and go to state 51
 
-
-State 124
-
-   19 N_PARAMETER_LIST: N_PARAMETER_LIST ',' • N_SYMBOL_ACCESS
-
-    T_IDENTIFIER  shift, and go to state 78
-
-    N_SYMBOL_ACCESS            go to state 127
-    N_NON_ARRAY_SYMBOL_ACCESS  go to state 63
-    N_ARRAY_SYMBOL_ACCESS      go to state 64
+    N_BLOCK  go to state 136
 
 
-State 125
+State 136
 
-    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS • M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')'
-   14 N_VARIABLE_ACCESS: N_VARIABLE_ACCESS M_CLASS_ACCESS_SCOPE_CHANGE $@1 '.' N_SYMBOL_ACCESS •
+   75 N_FOR_STATEMENT: T_FOR '(' ',' ',' ')' N_BLOCK •
 
-    '('       reduce using rule 11 (M_PARAMETER_LOOKUP_SCOPE_CHANGE)
-    $default  reduce using rule 14 (N_VARIABLE_ACCESS)
-
-    M_PARAMETER_LOOKUP_SCOPE_CHANGE  go to state 82
-
-
-State 126
-
-   69 N_FOR_STATEMENT: T_FOR '(' ',' ',' ')' N_BLOCK •
-
-    $default  reduce using rule 69 (N_FOR_STATEMENT)
-
-
-State 127
-
-    9 N_NON_ARRAY_SYMBOL_ACCESS: N_SYMBOL_ACCESS • M_PARAMETER_LOOKUP_SCOPE_CHANGE '(' N_PARAMETER ')'
-   19 N_PARAMETER_LIST: N_PARAMETER_LIST ',' N_SYMBOL_ACCESS •
-
-    '('       reduce using rule 11 (M_PARAMETER_LOOKUP_SCOPE_CHANGE)
-    $default  reduce using rule 19 (N_PARAMETER_LIST)
-
-    M_PARAMETER_LOOKUP_SCOPE_CHANGE  go to state 82
+    $default  reduce using rule 75 (N_FOR_STATEMENT)

@@ -43,7 +43,7 @@ public:
 
     auto matchArraySubscript (
         ArraytypePair * pArraytype
-    ) -> bool;
+    ) -> int;
 
 };
 

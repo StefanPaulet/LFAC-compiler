@@ -3,6 +3,8 @@
 
 #include "../TypeEntry.hpp"
 
+class Scope;
+
 class StructuredTypeEntry : public TypeEntry {
 
 public:
