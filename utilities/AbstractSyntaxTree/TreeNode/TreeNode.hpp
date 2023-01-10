@@ -26,7 +26,7 @@ public:
     };
 
     enum ValueType {
-        __STRING, __CHAR, __BOOL, __FLOAT, __INT
+        __STRING, __CHAR, __BOOL, __FLOAT, __INT, __NON_VALUE
     };
 
     union ValueUnion {
@@ -48,26 +48,31 @@ protected:
 
     _OPERATORS   _label { __ROOT };
 
+    ValueType    _nodeType { __NON_VALUE };
+
     unsigned int _childCount { 0 };
 
     TreeNode * * _pChildList { nullptr };
 
-    TreeNode * _pParent { nullptr };
+    TreeNode *   _pParent { nullptr };
 
 public:
     TreeNode () = default;
 
     TreeNode (
         _OPERATORS   label,
+        ValueType    type,
         unsigned int childCount,
         TreeNode * * pchildList
     ) :
         _label      ( label ),
+        _nodeType   ( type ),
         _childCount ( childCount),
         _pChildList ( pchildList ) {
         }
 
     ~TreeNode ();
+
 
     auto setChildList (
         TreeNode * * pChildList
@@ -76,7 +81,21 @@ public:
         TreeNode * pParent
     ) -> void;
 
+
     virtual auto eval () -> ValueUnion;
+
+
+    auto setChildCount (
+        unsigned int childCount
+    ) -> void;
+
+
+    auto getType () -> ValueType;
+
+
+    auto setType (
+        ValueType type
+    ) -> void;
 };
 
 #endif //__TREE_NODE_HPP__

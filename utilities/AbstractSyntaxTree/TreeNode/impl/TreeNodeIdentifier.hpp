@@ -4,9 +4,10 @@
 
 TreeNodeIdentifier :: TreeNodeIdentifier (
     _OPERATORS     label,
+    ValueType      type,
     SymbolEntry * pEntry
 ) : 
-    TreeNode ( label, 0, nullptr ),
+    TreeNode ( label, type, 0, nullptr ),
     _pEntry  ( pEntry ) {
 
     }
@@ -36,19 +37,23 @@ auto TreeNodeIdentifier :: setLabel (
 
 auto TreeNodeIdentifier :: getVal () -> ValueUnion {
 
-    if ( this->_pEntry->getTypeName() == "float" ) {
-        return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().floatValue;
+    switch ( this->_nodeType ) {
+        case __STRING: {
+            return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().stringValue;
+        }
+        case __CHAR: {
+            return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().charValue;
+        }
+        case __BOOL: {
+            return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().boolValue;
+        }
+        case __INT: {
+            return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().intValue;
+        }
+        default: {
+            return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().floatValue;
+        }
     }
-    if ( this->_pEntry->getTypeName() == "char" ) {
-        return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().charValue;
-    }
-    if ( this->_pEntry->getTypeName() == "bool" ) {
-        return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().boolValue;
-    }
-    if ( this->_pEntry->getTypeName() == "string" ) {
-        return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().stringValue;
-    }
-    return ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->getValue().intValue;
 }
 
 
@@ -56,25 +61,27 @@ auto TreeNodeIdentifier :: setVal (
     ValueUnion val
 ) -> void {
 
-    if ( this->_pEntry->getTypeName() == "int" ) {
-        ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->setValue ( val.intValue );
-        return;
-    }
-    if ( this->_pEntry->getTypeName() == "float" ) {
-        ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->setValue ( val.floatValue );
-        return;
-    }
-    if ( this->_pEntry->getTypeName() == "char" ) {
+    switch ( this->_nodeType ) {
+        case __STRING: {
+            ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->setValue ( val.stringValue );
+            break;
+        }
+        case __CHAR: {
         ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->setValue ( val.charValue );
-        return;
-    }
-    if ( this->_pEntry->getTypeName() == "bool" ) {
+            break;
+        }
+        case __BOOL: {
         ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->setValue ( val.boolValue );
-        return;
-    }
-    if ( this->_pEntry->getTypeName() == "string" ) {
-        ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->setValue ( val.stringValue );
-        return;
+            break;
+        }
+        case __INT: {
+        ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->setValue ( val.intValue );
+            break;
+        }
+        case __FLOAT: {
+        ( reinterpret_cast < VariableEntry * > ( this->_pEntry ) )->setValue ( val.floatValue );
+            break;
+        }
     }
 }
 
@@ -86,7 +93,16 @@ auto TreeNodeIdentifier :: eval () -> ValueUnion {
             break;
         }
         case __CALL : {
-            return 0;
+            auto pFunction = ( reinterpret_cast < FunctionEntry * > ( ( reinterpret_cast < TreeNodeIdentifier * > ( this->_pChildList[0] ) )->getSymbol() ) );
+            auto pParameterEntries = pFunction->getParameterList()->begin();
+            for ( auto i = 1; i < this->_childCount; ++ i ) {
+                ( reinterpret_cast < VariableEntry * > ( * pParameterEntries ) )->setValue ( 
+                    ( reinterpret_cast < VariableEntry * > ( ( reinterpret_cast < TreeNodeIdentifier * > ( this->_pChildList[i] ) )->getSymbol() ) )->getValue()
+                );
+                ++ pParameterEntries;
+            }
+            pFunction->getFunctionBody()->eval();
+            return this->getVal();
         }
         case __VAR : {
             return this->getVal();

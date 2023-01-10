@@ -5,14 +5,13 @@ TreeNodeConstant :: TreeNodeConstant (
     ValueType          type,
     ValueUnion const & value
 ) : 
-    TreeNode ( __CONST, 0, nullptr ),
-    _type    ( type ),
+    TreeNode ( __CONST, type, 0, nullptr ),
     _value   ( value ) {
 
     }
 
 auto TreeNodeConstant :: eval () -> ValueUnion {
-    switch ( this->_type ) {
+    switch ( this->_nodeType ) {
         case __STRING: {
             return this->_value.stringValue;
             break;

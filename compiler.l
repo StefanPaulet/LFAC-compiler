@@ -20,6 +20,7 @@ For for
 While while
 Main main
 Const const
+Return return
 
 Band &&
 Bor \|\|
@@ -66,7 +67,10 @@ Identifier   ({letter}|_)({letter}|{digit}|_)*
 }
 
 {StringValue} {
-    yylval.stringValue = strdup ( yytext );
+    char * pText = strdup ( yytext + 1 );
+    pText [ strlen ( pText ) - 1 ] = '\0';
+    yylval.stringValue = strdup ( pText );
+    free ( pText );
     return ( T_STRING_VALUE );
 }
 
@@ -92,6 +96,10 @@ Identifier   ({letter}|_)({letter}|{digit}|_)*
 
 {For} {
     return ( T_FOR );
+}
+
+{Return} {
+    return ( T_RETURN );
 }
 
 {Type} {

@@ -65,12 +65,13 @@ extern int yydebug;
     T_WHILE = 266,                 /* T_WHILE  */
     T_FOR = 267,                   /* T_FOR  */
     T_CONST = 268,                 /* T_CONST  */
-    T_TYPE = 269,                  /* T_TYPE  */
-    T_IDENTIFIER = 270,            /* T_IDENTIFIER  */
-    T_BAND = 271,                  /* T_BAND  */
-    T_BOR = 272,                   /* T_BOR  */
-    UNOT = 273,                    /* UNOT  */
-    UMINUS = 274                   /* UMINUS  */
+    T_RETURN = 269,                /* T_RETURN  */
+    T_TYPE = 270,                  /* T_TYPE  */
+    T_IDENTIFIER = 271,            /* T_IDENTIFIER  */
+    T_BAND = 272,                  /* T_BAND  */
+    T_BOR = 273,                   /* T_BOR  */
+    UNOT = 274,                    /* UNOT  */
+    UMINUS = 275                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -79,7 +80,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 34 "compiler.ypp"
+#line 35 "compiler.ypp"
 
     int intValue;
     float floatValue;
@@ -99,7 +100,7 @@ union YYSTYPE
     ExpressionType * pExpression;
 #endif
 
-#line 103 "compiler.hpp"
+#line 104 "compiler.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

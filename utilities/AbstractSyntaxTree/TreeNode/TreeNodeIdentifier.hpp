@@ -18,6 +18,7 @@ public:
 
     TreeNodeIdentifier (
         _OPERATORS      label,
+        ValueType       type,
         SymbolEntry *   pEntry
     );
 

@@ -13,7 +13,7 @@ public:
         char    charValue;
         float   floatValue;
         int     intValue;
-        char *  stringValue;
+        char const *  stringValue;
         Scope * structValue;
 
         VariableEntry ** arrayValue;
@@ -23,7 +23,7 @@ public:
         VarValue ( char val ) : charValue ( val ) { }
         VarValue ( float val ) : floatValue ( val ) { }
         VarValue ( int val ) : intValue ( val ) { }
-        VarValue ( char * pVal ) : stringValue ( strdup ( pVal ) ) { }
+        VarValue ( char const * pVal ) : stringValue ( strdup ( pVal ) ) { }
         VarValue ( Scope * pVal ) : structValue ( pVal ) { }
         VarValue ( VariableEntry ** pVal ) : arrayValue ( pVal ) { }
     };

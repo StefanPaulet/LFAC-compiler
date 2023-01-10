@@ -199,6 +199,16 @@ namespace error {
     }
 
 
+    auto returnMismatchedTypes (
+        char const * pReturnType,
+        char const * pExpressionType
+    ) -> void {
+
+        ++ errorCount;
+        std :: string errorMsg = "Type of function return " + std :: string ( pReturnType ) + " does not match returned type " + pExpressionType;
+        yyerror ( errorMsg.c_str() );
+    }
+
     auto constIdentifierAssigned (
         char const * pIdentifierName
     ) -> void {

@@ -11,7 +11,6 @@ public:
     using TreeNode :: ValueUnion;
 
 private:
-    ValueType _type;
     ValueUnion _value;
 
 public:

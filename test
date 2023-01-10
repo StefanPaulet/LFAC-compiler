@@ -1,6 +1,21 @@
-int fdas = 2;
+float fdas = 2.5 + 3.4;
+int h ( int a, int b ){
+    int t = 2;
+    return a + b;
+}
+int prod ( int a, int b, int c  ){
+    return a * b * c;
+}
 int main() { 
-    int x = 4;
+    string cineva = "veve";
+    string cumva = cineva;
+    char ch = 'a';
+    bool adevar = false;
+    int re = 4;
+    int rr = 3;
+    int x = h ( re, rr );
+    int veverita;
+    veverita = prod ( re, rr, x );
     int z = 5 + 6 * 3 - 2;
     int t = z + 2 * x;
     {

@@ -8,7 +8,7 @@ AbstractSyntaxTree :: AbstractSyntaxTree (
     auto pChildren = new TreeNode * [ 2 ];
     pChildren [ 0 ] = pGlobalInitialization;
     pChildren [ 1 ] = pMainFunction;
-    this->_pRoot = new TreeNode ( ASTOperators :: __STMT, 2, pChildren );
+    this->_pRoot = new TreeNode ( ASTOperators :: __STMT, TreeNode :: ValueType :: __NON_VALUE, 2, pChildren );
 }
 
 

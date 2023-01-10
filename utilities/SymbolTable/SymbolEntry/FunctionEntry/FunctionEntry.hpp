@@ -54,6 +54,12 @@ public:
     auto setFunctionBody ( 
         TreeNode * pFunctionBody
     ) -> void;
+
+
+    auto getFunctionBody () -> TreeNode *;
+
+
+    auto getParameterList () -> ParameterList *;
 };
 
 #include "../../../AbstractSyntaxTree/TreeNode/impl/TreeNodeIdentifier.hpp"

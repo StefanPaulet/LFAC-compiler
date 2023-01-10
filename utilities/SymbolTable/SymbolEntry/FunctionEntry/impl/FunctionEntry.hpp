@@ -96,4 +96,16 @@ auto FunctionEntry :: setFunctionBody (
     this->_pFunctionBody = pFunctionBody;
 }
 
+
+auto FunctionEntry :: getFunctionBody () -> TreeNode * {
+    
+    return this->_pFunctionBody;
+}
+
+
+auto FunctionEntry :: getParameterList () -> ParameterList * {
+    
+    return this->_pParameterList;
+}
+
 #endif //__FUNCTION_ENTRY_IMPL_HPP__

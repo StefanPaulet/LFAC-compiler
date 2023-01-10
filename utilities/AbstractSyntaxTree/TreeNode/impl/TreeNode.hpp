@@ -24,22 +24,103 @@ auto TreeNode :: setParent (
 }
 
 auto TreeNode :: eval () -> ValueUnion {
-    
+
     switch ( this->_label ) {
         case __PLUS: {
-            return this->_pChildList[0]->eval().intValue + this->_pChildList[1]->eval().intValue;
+            switch ( this->_nodeType ) {
+                case __INT : {
+                    return this->_pChildList[0]->eval().intValue + this->_pChildList[1]->eval().intValue;
+                }
+                case __FLOAT : {
+                    return this->_pChildList[0]->eval().floatValue + this->_pChildList[1]->eval().floatValue;
+                }
+                case __BOOL : {
+                    return this->_pChildList[0]->eval().boolValue + this->_pChildList[1]->eval().boolValue;
+                }
+                case __CHAR : {
+                    return this->_pChildList[0]->eval().charValue + this->_pChildList[1]->eval().charValue;
+                }
+                case __STRING : {
+                    break;
+                }
+            }
+            
         }
         case __MINUS: {
-            return this->_pChildList[0]->eval().intValue - this->_pChildList[1]->eval().intValue;
+            switch ( this->_nodeType ) {
+                case __INT : {
+                    return this->_pChildList[0]->eval().intValue - this->_pChildList[1]->eval().intValue;
+                }
+                case __FLOAT : {
+                    return this->_pChildList[0]->eval().floatValue - this->_pChildList[1]->eval().floatValue;
+                }
+                case __BOOL : {
+                    return this->_pChildList[0]->eval().boolValue - this->_pChildList[1]->eval().boolValue;
+                }
+                case __CHAR : {
+                    return this->_pChildList[0]->eval().charValue - this->_pChildList[1]->eval().charValue;
+                }
+                case __STRING : {
+                    break;
+                }
+            }
         }
         case __UMINUS: {
-            return - this->_pChildList[0]->eval().intValue;
+            switch ( this->_nodeType ) {
+                case __INT : {
+                    return -this->_pChildList[0]->eval().intValue;
+                }
+                case __FLOAT : {
+                    return -this->_pChildList[0]->eval().floatValue;
+                }
+                case __BOOL : {
+                    return -this->_pChildList[0]->eval().boolValue;
+                }
+                case __CHAR : {
+                    return -this->_pChildList[0]->eval().charValue;
+                }
+                case __STRING : {
+                    break;
+                }
+            }
         }
         case __MUL: {
-            return this->_pChildList[0]->eval().intValue * this->_pChildList[1]->eval().intValue;
+            switch ( this->_nodeType ) {
+                case __INT : {
+                    return this->_pChildList[0]->eval().intValue * this->_pChildList[1]->eval().intValue;
+                }
+                case __FLOAT : {
+                    return this->_pChildList[0]->eval().floatValue * this->_pChildList[1]->eval().floatValue;
+                }
+                case __BOOL : {
+                    return this->_pChildList[0]->eval().boolValue * this->_pChildList[1]->eval().boolValue;
+                }
+                case __CHAR : {
+                    return this->_pChildList[0]->eval().charValue * this->_pChildList[1]->eval().charValue;
+                }
+                case __STRING : {
+                    break;
+                }
+            }
         }
         case __DIV: {
-            return this->_pChildList[0]->eval().intValue / this->_pChildList[1]->eval().intValue;
+            switch ( this->_nodeType ) {
+                case __INT : {
+                    return this->_pChildList[0]->eval().intValue / this->_pChildList[1]->eval().intValue;
+                }
+                case __FLOAT : {
+                    return this->_pChildList[0]->eval().floatValue / this->_pChildList[1]->eval().floatValue;
+                }
+                case __BOOL : {
+                    return this->_pChildList[0]->eval().boolValue / this->_pChildList[1]->eval().boolValue;
+                }
+                case __CHAR : {
+                    return this->_pChildList[0]->eval().charValue / this->_pChildList[1]->eval().charValue;
+                }
+                case __STRING : {
+                    break;
+                }
+            }
         }
         case __ASG: {
             ValueUnion aux = this->_pChildList[1]->eval();
@@ -66,5 +147,25 @@ auto TreeNode :: eval () -> ValueUnion {
     }
     return 0;
 };
+
+
+auto TreeNode :: setChildCount (
+    unsigned int childCount
+) -> void {
+    
+    this->_childCount = childCount;
+}
+
+
+auto TreeNode :: getType () -> ValueType {
+    return this->_nodeType;
+}
+
+
+auto TreeNode :: setType (
+    ValueType type
+) -> void {
+    this->_nodeType = type;
+}
 
 #endif //__TREE_NODE_IMPL_HPP__

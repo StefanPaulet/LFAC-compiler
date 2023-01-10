@@ -57,11 +57,23 @@ auto VariableEntry :: setValue (
     VarValue val
 ) -> void {
 
-
-    std :: cout << this << ' ' << this->_pName << " has value " << this->_val.intValue << '\n';
     this->_val = val;
-
-    std :: cout << this << ' ' << this->_pName << " get value " << this->_val.intValue << '\n';
+    auto typeName = this->_pType->getName();
+    if ( ! strcmp ( typeName, "int" ) ) {
+        std :: cout << this->_pName << " has value " << this->_val.intValue << '\n';
+    }
+    if ( ! strcmp ( typeName, "float" ) ) {
+        std :: cout << this->_pName << " has value " << this->_val.floatValue << '\n';
+    }
+    if ( ! strcmp ( typeName, "char" ) ) {
+        std :: cout << this->_pName << " has value " << this->_val.charValue << '\n';
+    }
+    if ( ! strcmp ( typeName, "bool" ) ) {
+        std :: cout << this->_pName << " has value " << this->_val.boolValue << '\n';
+    }
+    if ( ! strcmp ( typeName, "string" ) ) {
+        std :: cout << this->_pName << " has value " << this->_val.stringValue << '\n';
+    }
 }
 
 
